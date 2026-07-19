@@ -13,7 +13,6 @@ from django.contrib.auth import authenticate
 @api_view(['POST'])
 def createUser(req):
     try:
-        print("hello")
         user = registerSerializer(data=req.data)
         if user.is_valid():
             user.save()
@@ -30,7 +29,6 @@ def createUser(req):
 
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
-
 
 @api_view(["POST"])
 @permission_classes([AllowAny])

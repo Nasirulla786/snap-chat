@@ -1,13 +1,17 @@
 'use client'
 import { ServerURL } from '@/app/page'
+import { setUserData } from '@/app/redux/slices/userslice'
 import axios from 'axios'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
+import { useDispatch } from 'react-redux'
 
 const LoginPage = () => {
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const router = useRouter()
+
+  const dispatch = useDispatch()
 
 
 
@@ -18,6 +22,7 @@ const LoginPage = () => {
      const res = await axios.post(`${ServerURL}/api/login/`,{username, password},{withCredentials:true})
 
     console.log(res.data)
+    dispatch(setUserData(res.data))
     alert(res.data.message)
     router.push("/")
 
