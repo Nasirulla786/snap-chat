@@ -13,6 +13,7 @@ from django.contrib.auth import authenticate
 @api_view(['POST'])
 def createUser(req):
     try:
+        print("hello")
         user = registerSerializer(data=req.data)
         if user.is_valid():
             user.save()
@@ -27,7 +28,12 @@ def createUser(req):
         return Response( status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
+from rest_framework.permissions import AllowAny
+from rest_framework.decorators import permission_classes
+
+
 @api_view(["POST"])
+@permission_classes([AllowAny])
 def loginUser(request):
     username = request.data.get("username")
     password = request.data.get("password")
@@ -40,31 +46,35 @@ def loginUser(request):
     if user is None:
         return Response(
             {"message": "Invalid credentials"},
-            status=401
+            status=status.HTTP_401_UNAUTHORIZED
         )
 
     refresh = RefreshToken.for_user(user)
 
-    response = Response({
-        "message": "Login successful"
-    })
+    response = Response(
+        {
+            "message": "Login successful"
+        },
+        status=status.HTTP_200_OK
+    )
 
     response.set_cookie(
         key="access_token",
         value=str(refresh.access_token),
         httponly=True,
-        samesite="Lax"
+        samesite="Lax",
+        max_age=15 * 60
     )
 
     response.set_cookie(
         key="refresh_token",
         value=str(refresh),
         httponly=True,
-        samesite="Lax"
+        samesite="Lax",
+        max_age=7 * 24 * 60 * 60
     )
 
     return response
-
 
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
