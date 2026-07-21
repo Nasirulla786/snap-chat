@@ -8,6 +8,10 @@ from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.decorators import api_view, permission_classes, parser_classes
 from rest_framework.parsers import MultiPartParser, FormParser
+import cloudinary.api
+
+import cloudinary.uploader
+import os
 
 
 
@@ -22,7 +26,36 @@ def getAllReels(req):
 @permission_classes([IsAuthenticated])
 @parser_classes([MultiPartParser, FormParser])
 def createReel(req):
-    serializer = ReelSerializer(data=req.data)
+    # print(req)
+    # print(req.data)
+    # print(req.FILES.get('reel'))
+
+
+    # print(os.getenv("CLOUD_NAME"))
+    # print(os.getenv("CLOUD_API_KEY"))
+    # print(os.getenv("CLOUD_API_SECRET"))
+
+
+    file  = req.FILES.get('reel')
+
+    try:
+        upload = cloudinary.uploader.upload(
+            file,
+            resource_type="video"
+        )
+    except Exception as e:
+        return Response(
+            {"error": str(e)},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    data = {
+    "caption": req.data.get("caption"),
+    "reel": upload["secure_url"],
+}
+
+
+    serializer = ReelSerializer(data=data )
     if serializer.is_valid():
         serializer.save(user=req.user)
         return Response(

@@ -22,4 +22,6 @@ class ReelSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ReelModel
-        fields = ["id", "caption", "reel", "user", "createdAt", "updateAt", "likes"]
+        fields = ["id", "caption", "reel", "user", "createdAt", "updatedAt", "likes"]
+
+

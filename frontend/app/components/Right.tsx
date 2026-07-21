@@ -51,7 +51,7 @@ const Right = () => {
                     >
                         {/* video */}
                         <video
-                            src={`${"http://localhost:8000"}` + item.reel}
+                            src={item.reel}
                             className='w-full h-full object-cover'
                             autoPlay
                             loop
