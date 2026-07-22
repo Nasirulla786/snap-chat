@@ -30,9 +30,11 @@ def createUser(req):
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import permission_classes
 
+from rest_framework_simplejwt.tokens import AccessToken, RefreshToken
+
 @api_view(["POST"])
-@permission_classes([AllowAny])
 def loginUser(request):
+
     username = request.data.get("username")
     password = request.data.get("password")
 
@@ -47,6 +49,7 @@ def loginUser(request):
             status=status.HTTP_401_UNAUTHORIZED
         )
 
+    access = AccessToken.for_user(user)
     refresh = RefreshToken.for_user(user)
 
     response = Response(
@@ -58,7 +61,7 @@ def loginUser(request):
 
     response.set_cookie(
         key="access_token",
-        value=str(refresh.access_token),
+        value=str(access),
         httponly=True,
         samesite="Lax",
         max_age=15 * 60
@@ -66,7 +69,7 @@ def loginUser(request):
 
     response.set_cookie(
         key="refresh_token",
-        value=str(refresh),
+        value=str(refresh),   # ✅ Ye hona chahiye
         httponly=True,
         samesite="Lax",
         max_age=7 * 24 * 60 * 60
@@ -91,3 +94,11 @@ def logoutUser(req):
     response.delete_cookie("refresh_token")
 
     return response
+
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def CommentReel(req , id):
+    message = req.data
+    reel = get_object_or_404()

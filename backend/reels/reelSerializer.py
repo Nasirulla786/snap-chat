@@ -1,4 +1,4 @@
-from .models import ReelModel
+from .models import ReelModel , Comment
 from rest_framework import serializers
 from django.contrib.auth.models import User
 
@@ -15,13 +15,20 @@ class LikeSerializer(serializers.ModelSerializer):
         fields = ["id", "username"]
 
 
-class ReelSerializer(serializers.ModelSerializer):
-
+class CommentSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    likes = LikeSerializer(many=True ,  read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ["id", "user", "message", "reel", "createdAt"]
+        read_only_fields = ["user", "reel", "createdAt"]
+
+
+class ReelSerializer(serializers.ModelSerializer):
+    user = UserSerializer(read_only=True)
+    likes = LikeSerializer(many=True, read_only=True)
+    comments = CommentSerializer(source="reel_comment", many=True, read_only=True)
 
     class Meta:
         model = ReelModel
-        fields = ["id", "caption", "reel", "user", "createdAt", "updatedAt", "likes"]
-
-
+        fields = ["id", "caption", "reel", "user", "createdAt", "updatedAt", "likes", "comments"]

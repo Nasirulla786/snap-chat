@@ -18,8 +18,15 @@ const LoginPage = () => {
   const handleSubmit = async (e: any) => {
     e.preventDefault()
 
+
    try {
+
      const res = await axios.post(`${ServerURL}/api/login/`,{username, password},{withCredentials:true})
+
+     console.log(username , password)
+
+
+
 
     console.log(res.data)
     dispatch(setUserData(res.data))
