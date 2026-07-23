@@ -43,7 +43,9 @@ const Right = () => {
 
     const [mutedId, setMutedId] = useState<number | null>(null)
     const [message, setMessage] = useState('')
+    const [likedMap, setLikedMap] = useState<Record<number, boolean>>({})
 
+    const currentUserId = userData?.id
 
     const [openCommentId, setOpenCommentId] = useState<number | null>(null)
 
@@ -62,12 +64,16 @@ const Right = () => {
             })
 
             const updatedReel = res.data.reel
-
             const newReels = (reelData?.reels ?? []).map((reel: IReel) =>
                 reel.id === id ? updatedReel : reel
             )
 
             dispatch(setReelData({ ...reelData, reels: newReels }))
+
+            if (currentUserId != null) {
+                const liked = updatedReel.likes.some((user: IUser) => user.id === currentUserId)
+                setLikedMap((prev) => ({ ...prev, [id]: liked }))
+            }
         } catch (error) {
             console.log(error)
         }
@@ -137,9 +143,12 @@ const Right = () => {
 
                 reelData.reels.map((item: IReel) => {
 
-                    const isLiked = item.likes.some(
-                        (user) => user.id === userData?.id
-                    )
+                    const isLiked =
+                        likedMap[item.id] !== undefined
+                            ? likedMap[item.id]
+                            : currentUserId != null
+                                ? item.likes.some((user) => user.id === currentUserId)
+                                : false
 
                     const isMuted = mutedId !== item.id
 
@@ -188,6 +197,7 @@ const Right = () => {
                                             size={22}
                                             fill={isLiked ? '#FF3040' : 'transparent'}
                                             color={isLiked ? '#FF3040' : 'white'}
+                                            strokeWidth={1.8}
                                         />
                                     </div>
                                     <span className="text-[11px] mt-1 font-medium drop-shadow">{item.likes.length}</span>

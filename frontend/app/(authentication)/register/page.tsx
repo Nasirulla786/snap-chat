@@ -12,13 +12,25 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('')
   const router = useRouter()
 
-  const handleSubmit =async (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault()
 
-    const res =  await axios.post(`${ServerURL}/api/register/` , {username , email , password},{withCredentials:true})
-    console.log(res)
+    const res = await axios.post(`${ServerURL}/api/register/`, { username, email, password }, { withCredentials: true })
 
-    router.push("/")
+    if (res.status === 201) {
+      await axios.post(
+        `${ServerURL}/api/login/`,
+        { username, password },
+        { withCredentials: true }
+      )
+      router.push("/profile-form")
+    } else {
+      alert(res.data?.message || "Failed to register")
+    }
+
+
+
+
 
 
 

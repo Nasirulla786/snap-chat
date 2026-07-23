@@ -135,6 +135,8 @@ const Middle = () => {
     // Canvas ko image URL me convert kar rahe hain
     const image = canvas.toDataURL('image/jpeg')
 
+    console.log(image)
+
 
     // Captured image ko state me save
     setCapturedImage(image)
