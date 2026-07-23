@@ -80,6 +80,7 @@ def loginUser(request):
 @api_view(["GET"])
 @permission_classes([IsAuthenticated])
 def currentUser(request):
+    print(request)
     return Response({
         "id": request.user.id,
         "username": request.user.username,
@@ -96,9 +97,3 @@ def logoutUser(req):
     return response
 
 
-
-@api_view(['POST'])
-@permission_classes([IsAuthenticated])
-def CommentReel(req , id):
-    message = req.data
-    reel = get_object_or_404()

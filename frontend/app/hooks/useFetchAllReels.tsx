@@ -13,7 +13,7 @@ const useFetchAllReels = () => {
     useEffect(()=>{
         const fetchALlReels = async()=>{
             try {
-                const res  = await axios.get(`${ServerURL}/api/get-all-reels` ,{withCredentials:true})
+                const res  = await axios.get(`${ServerURL}/api/get-all-reels/` ,{withCredentials:true})
                 dispatch(setReelData(res.data))
 
 

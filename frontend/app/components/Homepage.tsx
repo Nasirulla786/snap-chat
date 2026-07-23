@@ -5,7 +5,7 @@ import Right from "./Right"
 const Homepage = () => {
 
     return (
-        <main className='w-full sm:grid grid-cols-[20%_50%_30%] h-screen'>
+        <main className='w-full sm:grid grid-cols-[20%_55%_25%] h-screen bg-black'>
 
 
 
