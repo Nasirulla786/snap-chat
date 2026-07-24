@@ -2,6 +2,7 @@
 import { ServerURL } from '@/app/page'
 import { setUserData } from '@/app/redux/slices/userslice'
 import axios from 'axios'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 import { useDispatch } from 'react-redux'
@@ -19,27 +20,31 @@ const LoginPage = () => {
     e.preventDefault()
 
 
-   try {
+    try {
 
-     const res = await axios.post(`${ServerURL}/api/login/`,{username, password},{withCredentials:true})
-
-     console.log(username , password)
+      const res = await axios.post(`${ServerURL}/api/login/`, { username, password }, { withCredentials: true })
 
 
+      dispatch(setUserData(res.data))
+      if (res.status == 200) {
+        alert(res.data.message)
+        router.push("/")
+      }
+
+      else if (res.status == 401) {
+        alert("Invalid credentials")
+
+      }
 
 
-    console.log(res.data)
-    dispatch(setUserData(res.data))
-    alert(res.data.message)
-    router.push("/")
 
 
 
-   } catch (error) {
-    console.log(error)
-    alert("Something went wrong..")
+    } catch (error) {
+      console.log(error)
+      alert("Something Went Wrong")
 
-   }
+    }
   }
 
   return (
@@ -116,7 +121,7 @@ const LoginPage = () => {
 
         <p className="text-center text-sm text-black mt-6 font-medium">
           Don&apos;t have an account?{' '}
-          <span className="font-bold underline cursor-pointer">Sign up</span>
+          <Link href={"/register  "}>   <span className="font-bold underline cursor-pointer">Sign up</span></Link>
         </p>
       </div>
     </div>

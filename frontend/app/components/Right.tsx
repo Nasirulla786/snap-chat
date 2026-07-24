@@ -137,7 +137,7 @@ const Right = () => {
     const activeComments = openCommentId ? commentsMap[openCommentId] || [] : []
 
     return (
-        <section className="right hidden sm:flex flex-col items-center gap-4 bg-black h-screen overflow-y-scroll snap-y snap-mandatory relative py-4">
+        <section className="right hidden md:flex flex-col items-center gap-4 bg-black h-screen overflow-y-scroll snap-y snap-mandatory relative py-4">
 
             {reelData?.reels?.length ? (
 

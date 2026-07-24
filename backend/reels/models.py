@@ -8,7 +8,7 @@ class ReelModel(models.Model):
     createdAt = models.DateTimeField(auto_now_add=True)
     updatedAt = models.DateTimeField(auto_now=True)
     likes = models.ManyToManyField(to=User , blank=True )
-
+   
 
 class Comment(models.Model):
     user = models.ForeignKey(to=User , on_delete=models.CASCADE )

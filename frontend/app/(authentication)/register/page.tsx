@@ -2,6 +2,7 @@
 
 import { ServerURL } from '@/app/page'
 import axios from 'axios'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
@@ -129,7 +130,7 @@ const RegisterPage = () => {
 
         <p className="text-center text-sm text-black mt-6 font-medium">
           Already have an account?{' '}
-          <span className="font-bold underline cursor-pointer">Log in</span>
+         <Link href={"/login"}> <span className="font-bold underline cursor-pointer" >Log in</span></Link>
         </p>
       </div>
     </div>

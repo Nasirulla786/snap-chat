@@ -55,7 +55,9 @@ INSTALLED_APPS = [
     'user',
     'corsheaders',
     "cloudinary",
-    'reels'
+    'reels',
+    'snap'
+
 ]
 
 MIDDLEWARE = [

@@ -4,6 +4,8 @@ import { useRouter } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
 // import Image from "n"
 import { Camera } from 'lucide-react';
+import axios from 'axios';
+import { ServerURL } from '../page';
 
 const Middle = () => {
 
@@ -135,7 +137,8 @@ const Middle = () => {
     // Canvas ko image URL me convert kar rahe hain
     const image = canvas.toDataURL('image/jpeg')
 
-    console.log(image)
+
+
 
 
     // Captured image ko state me save
@@ -157,6 +160,27 @@ const Middle = () => {
   }
 
 
+  const handleSave = async()=>{
+
+      const formData = new FormData()
+   formData.append("snap",capturedImage)
+
+   const res = await axios.post(`${ServerURL}/api/create-snap/` , formData ,{withCredentials:true})
+
+   console.log(res)
+   if(res.status==201){
+    alert("Snap Saved..!")
+   }
+
+   else{
+    alert("something went wrong")
+   }
+
+
+
+  }
+
+
   return (
 
     <section className="relative h-screen w-full  flex items-center justify-center overflow-hidden">
@@ -168,7 +192,7 @@ const Middle = () => {
       ================================= */}
 
 
-    <div className='w-full h-full p-2 ' >
+    <div className='w-full h-full p- ' >
 
         <img src="https://images.bitmoji.com/3d/background/963450496-1.webp" alt='None' className='relative z-10 w-full h-full object-cover rounded-2xl '/>
       <div className="absolute top-10 sm:top-20 sm:left-[30%]  z-20 w-[380px] h-[560px] max-h-[92vh] rounded-[28px] bg-black shadow-[0_20px_60px_rgba(0,0,0,0.25)] overflow-hidden ">
@@ -212,7 +236,7 @@ const Middle = () => {
 
             <button
               onClick={() => router.push("/upload-reel")}
-              className="mt-5  text-sm underline hover:text-white transition bg-yellow-300 text-black p-3  no-underline  rounded-2xl"
+              className="mt-5 cursor-pointer  text-sm underline hover:text-white transition bg-yellow-300 text-black p-3  no-underline  rounded-2xl" 
             >
               Upload from device
             </button>
@@ -335,8 +359,10 @@ const Middle = () => {
 
               <button
                 className="bg-[#FFFC00] text-black font-bold text-sm px-5 py-2 rounded-full hover:brightness-95 active:scale-95 transition"
+
+                onClick={handleSave}
               >
-                Use Photo
+                Save Photo
               </button>
 
 
