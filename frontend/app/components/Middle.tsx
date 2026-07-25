@@ -162,7 +162,7 @@ const Middle = () => {
 
   const handleSave = async()=>{
 
-      const formData = new FormData()
+      const formData :any = new FormData()
    formData.append("snap",capturedImage)
 
    const res = await axios.post(`${ServerURL}/api/create-snap/` , formData ,{withCredentials:true})
@@ -183,7 +183,7 @@ const Middle = () => {
 
   return (
 
-    <section className="relative h-screen w-full  flex items-center justify-center overflow-hidden">
+    <section className="relative h-screen w-full  flex items-center justify-center overflow-hidden flex-col">
 
 
       {/* =================================
@@ -195,7 +195,7 @@ const Middle = () => {
     <div className='w-full h-full p- ' >
 
         <img src="https://images.bitmoji.com/3d/background/963450496-1.webp" alt='None' className='relative z-10 w-full h-full object-cover rounded-2xl '/>
-      <div className="absolute top-10 sm:top-20 sm:left-[30%]  z-20 w-[380px] h-[560px] max-h-[92vh] rounded-[28px] bg-black shadow-[0_20px_60px_rgba(0,0,0,0.25)] overflow-hidden ">
+      <div className="absolute top-10 sm:top-20 sm:left-[30%]  z-20 w-[400px]  sm:w-[380px] h-[560px] max-h-[92vh] sm:rounded-[28px] bg-black shadow-[0_20px_60px_rgba(0,0,0,0.25)] overflow-hidden ">
 
 
         {/* =================================
@@ -204,7 +204,7 @@ const Middle = () => {
 
         {!cameraOpen && (
 
-          <div className="h-full flex flex-col items-center justify-center text-white     bg-gradient-to-t from-[#86363E] to-[#ad5c5d]   px-8">
+          <div className="h-full flex flex-col items-center justify-center text-white  bg-gradient-to-t from-[#86363E] to-[#ad5c5d]   px-8">
 
 
             {/* Snapchat style ghost icon */}
@@ -236,7 +236,7 @@ const Middle = () => {
 
             <button
               onClick={() => router.push("/upload-reel")}
-              className="mt-5 cursor-pointer  text-sm underline hover:text-white transition bg-yellow-300 text-black p-3  no-underline  rounded-2xl" 
+              className="mt-5 cursor-pointer  text-sm underline hover:text-white transition bg-yellow-300 text-black p-3  no-underline  rounded-2xl"
             >
               Upload from device
             </button>
@@ -376,6 +376,18 @@ const Middle = () => {
 
       </div>
     </div>
+
+
+
+
+ {/* =================================
+          Mobile FRAME —
+      ================================= */}
+
+
+<div className='w-full h-[20vh] bg-red-500 sm:hidden z-30'>
+
+</div>
 
 
     </section>

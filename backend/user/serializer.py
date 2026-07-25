@@ -25,3 +25,10 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ["id", "user", "image", "bio"]
+
+
+class SearchSerialize(serializers.ModelSerializer):
+    image = serializers.CharField(source="user_profile.image", read_only=True)
+    class Meta:
+        model = User
+        fields = ["id", "username", "image", ]

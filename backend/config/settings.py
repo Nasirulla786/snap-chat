@@ -56,7 +56,8 @@ INSTALLED_APPS = [
     'corsheaders',
     "cloudinary",
     'reels',
-    'snap'
+    'snap',
+    'chats'
 
 ]
 

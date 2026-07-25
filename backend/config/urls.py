@@ -24,7 +24,8 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path("api/", include("user.urls")),
     path("api/",include("reels.urls")),
-    path("api/",include("snap.urls"))
+    path("api/",include("snap.urls")),
+    path("api/", include("chats.urls"))
 ]
 
 urlpatterns+= static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
