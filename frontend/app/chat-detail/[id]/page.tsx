@@ -18,8 +18,7 @@ const Page = () => {
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
 
-  // NAYA STATE: jab friend ka bheja hua snap (image) open karna ho
-  // isme us image ka url store hoga, agar null hai toh modal band rahega
+
   const [openSnap, setOpenSnap] = useState<string | null>(null);
 
   const imageRef = useRef<HTMLInputElement>(null);
@@ -48,6 +47,7 @@ const Page = () => {
 
   useEffect(() => {
     getChat();
+      getCurrentUser();
   }, [id]);
 
 
@@ -90,50 +90,58 @@ const Page = () => {
 
 
 
-  const sendMessage = async()=>{
+  // const sendMessage = async()=>{
 
-    try{
+  //   try{
 
-      const formData = new FormData();
+  //     const formData = new FormData();
 
-      formData.append("message", message);
-
-
-      if(image){
-        formData.append("image", image);
-      }
+  //     formData.append("message", message);
 
 
-
-      const res = await axios.post(
-        `${ServerURL}/api/send-message/${id}`,
-        formData,
-        {
-          withCredentials:true,
-          headers:{
-            "Content-Type":"multipart/form-data"
-          }
-        }
-      );
+  //     if(image){
+  //       formData.append("image", image);
+  //     }
 
 
-      console.log(res);
+
+  //     const res = await axios.post(
+  //       `${ServerURL}/api/send-message/${id}`,
+  //       formData,
+  //       {
+  //         withCredentials:true,
+  //         headers:{
+  //           "Content-Type":"multipart/form-data"
+  //         }
+  //       }
+  //     );
 
 
-      setMessage("");
-      cancelImage();
 
 
-    }catch(error){
-      console.log(error);
-    }
 
-  };
-
-  // ================= LOGIC END (UNCHANGED) =================
+  //     setMessage("");
+  //     cancelImage();
 
 
-  // Snap ko open/close karne ke chhote helper functions
+  //   }catch(error){
+  //     console.log(error);
+  //   }
+
+  // };
+
+
+
+
+
+//   const sendMessage = () => {
+//     socketRef.current?.send(
+//         JSON.stringify({
+//             message: "Hello Django"
+//         })
+//     )
+// }
+
   const openSnapImage = (url: string) => {
     setOpenSnap(url);
   };
@@ -142,6 +150,70 @@ const Page = () => {
     setOpenSnap(null);
   };
 
+const socketRef = useRef<WebSocket | null>(null);
+
+const sendMessage = () => {
+  if (!message.trim()) return;
+
+  socketRef.current?.send(
+    JSON.stringify({
+      message: message,
+      receiver_id: Number(id),
+    })
+  );
+
+  setMessage("");
+};
+
+
+useEffect(() => {
+  const socket = new WebSocket(
+    `ws://localhost:8000/ws/chat/${id}/`
+  );
+
+  socketRef.current = socket;
+
+  socket.onopen = () => {
+    console.log("WebSocket connected");
+  };
+
+socket.onmessage = (event) => {
+  const data = JSON.parse(event.data);
+
+  setMessages((previousMessages) => [
+    ...previousMessages,
+    {
+      sender: data.sender,
+      text_message: data.message,
+      createdAt: new Date().toISOString(),
+    },
+  ]);
+};
+
+  return () => {
+    socket.close();
+  };
+}, [id]);
+
+
+
+const [currentUser, setCurrentUser] = useState<any>(null);
+
+const getCurrentUser = async () => {
+  try {
+    const res = await axios.get(
+      `${ServerURL}/api/current-user/`,
+      {
+        withCredentials: true,
+      }
+    );
+
+    setCurrentUser(res.data.user);
+
+  } catch (error) {
+    console.log(error);
+  }
+};
 
   return (
     // Poori screen ka wrapper - Snapchat Web jaisa dark theme
@@ -274,7 +346,7 @@ const Page = () => {
                       myMessage ? "text-pink-500" : "text-sky-400"
                     }`}
                   >
-                    {myMessage ? "ME" : friend?.username?.toUpperCase()}
+                    {myMessage ? friend?.username?.toUpperCase():"ME"}
                   </span>
 
                   {msg.createdAt && (
