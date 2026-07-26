@@ -101,3 +101,38 @@ class SendMessage(APIView):
             )
 
         return Response({"message": "Message sent"})
+
+
+
+class GetPendingRequests(APIView):
+    def get(self , req):
+        friendRequests = FriendRequest.objects.filter(status=FriendRequest.StatusChoices.PENDING).filter(to_user=req.user)
+
+        serializeData = FriendSerializer(friendRequests ,many=True)
+
+        return Response({"data":serializeData.data})
+
+
+
+class AcceptInvite(APIView):
+    def get(self , req , id):
+        # print("thi sis id",id)
+        pendingFriend = get_object_or_404(User , pk=id)
+        if not pendingFriend:
+            return Response({"message":"Friend not found"})
+
+        serializeFriend = UserSerializer(pendingFriend)
+
+
+        friendRequest = FriendRequest.objects.filter(
+            Q(to_user=req.user) | Q(from_user=pendingFriend) | Q(status = FriendRequest.StatusChoices.PENDING)
+        ).first()
+
+
+        if friendRequest:
+            friendRequest.status = FriendRequest.StatusChoices.ACCEPTED
+            friendRequest.to_user  = req.user
+            friendRequest.save()
+            return Response({"message":"Accept Invite successfully" , "friend":serializeFriend.data})
+        else:
+            return Response({"message":"Not accepted"})

@@ -10,14 +10,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class FriendSerializer(serializers.ModelSerializer):
-
+    from_user = UserSerializer()
     class Meta:
         model = FriendRequest
-        fields =  [ "from_user","to_user","status"]
+        fields =  [ "id","from_user","to_user","status"]
 
 
 class MessagesSerializer(serializers.ModelSerializer):
-    # image = serializers.CharField()
     class Meta:
         model = Message
         fields = "__all__"

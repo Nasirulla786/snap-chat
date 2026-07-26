@@ -36,6 +36,7 @@ const Left = () => {
     const [search, setSearch] = useState('')
     const [users, setUsers] = useState<User[]>([])
     const [loading, setLoading] = useState(false)
+    const [openNotificationCheck, setOpenNotificationCheck] = useState<boolean>(false)
 
     useEffect(() => {
 
@@ -89,12 +90,11 @@ const Left = () => {
     }
 
 
-    const [homeChats, setHomeChats] = useState([])
-
-    useEffect(()=>{
-        const fetchMyFriends = async()=>{
+    const [homeChats, setHomeChats] = useState<any[]>([])
+    useEffect(() => {
+        const fetchMyFriends = async () => {
             try {
-                const res = await axios.get(`${ServerURL}/api/get-friends/` , {withCredentials:true})
+                const res = await axios.get(`${ServerURL}/api/get-friends/`, { withCredentials: true })
                 setHomeChats(res.data.data)
 
             } catch (error) {
@@ -104,15 +104,233 @@ const Left = () => {
         }
         fetchMyFriends()
 
-    },[])
+    }, [])
 
 
     const router = useRouter()
+    const [pendingRequest, setPendingRequest] = useState([])
+
+
+    useEffect(()=>{
+        const fetchMyPendingRequest= async()=>{
+            const res = await axios.get(`${ServerURL}/api/get-pending-request/` ,{withCredentials:true})
+            console.log("this is res",res)
+            setPendingRequest(res.data.data)
+        }
+        fetchMyPendingRequest()
+
+    } , [])
+
+
+    const handleAccept = async(id:any)=>{
+        try {
+            const res = await axios.get(`${ServerURL}/api/accept-invite/${id}/` , {withCredentials:true})
+            const friend = res.data.friend
+
+
+        const updatedRequests = pendingRequest.filter(
+            (request:any)=> request.from_user.id !== id
+        )
+
+
+
+           setHomeChats((prev:any)=>[
+            ...prev,
+            friend
+        ])
+
+
+
+        setPendingRequest(updatedRequests)
+
+
+
+        } catch (error) {
+            console.error(error)
+        }
+    }
+
+
+
 
 
     return (
 
         <div className="relative">
+
+          {
+  openNotificationCheck && (
+    <section className="left hidden md:flex flex-col w-[95%] bg-gray-100 h-screen">
+
+      {/* Header */}
+      <div className="flex items-center justify-between p-5 bg-white border-b">
+        <h2 className="text-xl font-bold text-gray-800">
+          Friend Requests
+        </h2>
+
+        <button
+          onClick={() => setOpenNotificationCheck(false)}
+          className="text-gray-500 hover:text-black"
+        >
+          ✕
+        </button>
+      </div>
+
+
+      {/* Requests List */}
+      <div className="p-5 space-y-4 overflow-y-auto">
+
+        {
+          pendingRequest.length > 0 ? (
+
+            pendingRequest.map((request:any)=>
+                {
+
+                    return(
+                         <div
+                key={request.from_user.id}
+                className="
+                  bg-white
+                  rounded-2xl
+                  shadow-sm
+                  p-4
+                  flex
+                  items-center
+                  justify-between
+                "
+              >
+
+                {/* User Info */}
+                <div className="flex items-center gap-4">
+
+                  {/* Avatar */}
+                  {
+                    request.from_user.image ? (
+
+                      <img
+                        src={request.from_user.image}
+                        className="
+                          w-14 h-14
+                          rounded-full
+                          object-cover
+                        "
+                      />
+
+                    ) : (
+
+                      <div
+                        className="
+                          w-14 h-14
+                          rounded-full
+                          bg-yellow-400
+                          flex
+                          items-center
+                          justify-center
+                          text-xl
+                          font-bold
+                          text-white
+                        "
+                      >
+                        {request.from_user.username[0]}
+                      </div>
+
+                    )
+                  }
+
+
+                  {/* Username */}
+                  <div>
+                    <h3 className="font-semibold text-gray-800">
+                      {request.from_user.username}
+                    </h3>
+
+                    <p className="text-sm text-gray-500">
+                      Sent you a friend request
+                    </p>
+                  </div>
+
+                </div>
+
+
+
+                {/* Actions */}
+                <div className="flex gap-2">
+
+                  <button
+                    className="
+                      bg-blue-500
+                      text-white
+                      px-4
+                      py-2
+                      rounded-xl
+                      hover:bg-blue-600
+                    "
+                    onClick={()=>handleAccept(request?.from_user?.id)}
+                  >
+                    Accept
+                  </button>
+
+
+                  <button
+                    className="
+                      bg-gray-200
+                      text-gray-700
+                      px-4
+                      py-2
+                      rounded-xl
+                      hover:bg-gray-300
+                    "
+                    onClick={()=>{
+                      console.log(
+                        "Reject",
+                        request.from_user.id
+                      )
+                    }}
+                  >
+                    Ignore
+                  </button>
+
+                </div>
+
+
+              </div>
+                    )
+                }
+
+            )
+
+          ) : (
+
+            <div className="
+              flex
+              flex-col
+              items-center
+              justify-center
+              h-full
+              text-gray-500
+            ">
+
+              <p className="text-lg">
+                No pending requests
+              </p>
+
+              <span className="text-sm">
+                New friend requests will appear here
+              </span>
+
+            </div>
+
+          )
+        }
+
+      </div>
+
+
+    </section>
+  )
+}
+
+
 
             <section className="left hidden md:flex flex-col w-[95%] bg-[#111111] text-white">
 
@@ -206,6 +424,10 @@ const Left = () => {
                             className="flex-1 bg-transparent outline-none text-white placeholder:text-gray-400"
                         />
 
+                        <div className='w-[30px] h-[30px] rounded-full bg-red-500 relative right-25 flex items-center justify-center text-[10px]'  onClick={()=>setOpenNotificationCheck(true)} >
+
+                        </div>
+
                         <div className="bg-black   absolute right-10 px-3 py-1 rounded-full flex items-center gap-1">
 
                             <span className="text-sm font-semibold">
@@ -230,41 +452,41 @@ const Left = () => {
                 <div className="w-full min-h-screen">
 
                     {
-                       homeChats.length!=0 &&  homeChats.map((user :any)=>{
+                        homeChats.length != 0 && homeChats.map((user: any) => {
 
-                            return(
-                                  <div onClick={()=>router.push('/chat-detail/'+user?.id)} className="flex items-center justify-between p-3 cursor-pointer bg-gray-900" key={user.id}>
+                            return (
+                                <div onClick={() => router.push('/chat-detail/' + user?.id)} className="flex items-center justify-between p-3 cursor-pointer bg-gray-900" key={user.id}>
 
-                        <div className="flex items-center gap-3">
+                                    <div className="flex items-center gap-3">
 
-                            <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center">
+                                        <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center">
 
-{user?.image?
-<img src={user?.image} alt="None" className='w-full h-full object-cover rounded-full' />:<span>D</span>}
+                                            {user?.image ?
+                                                <img src={user?.image} alt="None" className='w-full h-full object-cover rounded-full' /> : <span>D</span>}
 
 
 
-                            </div>
+                                        </div>
 
-                            <div>
+                                        <div>
 
-                                <h1>
-                                    {user?.username }
-                                </h1>
+                                            <h1>
+                                                {user?.username}
+                                            </h1>
 
-                                <p className="text-xs text-gray-400">
-                                    Opened · Jun 22
-                                </p>
+                                            <p className="text-xs text-gray-400">
+                                                Opened · Jun 22
+                                            </p>
 
-                            </div>
+                                        </div>
 
-                        </div>
+                                    </div>
 
-                        <span className="text-sm">
-                            Open
-                        </span>
+                                    <span className="text-sm">
+                                        Open
+                                    </span>
 
-                    </div>
+                                </div>
                             )
                         })
                     }
