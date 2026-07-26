@@ -125,9 +125,10 @@ class AcceptInvite(APIView):
 
 
         friendRequest = FriendRequest.objects.filter(
-            Q(to_user=req.user) | Q(from_user=pendingFriend) | Q(status = FriendRequest.StatusChoices.PENDING)
-        ).first()
-
+                from_user=pendingFriend,
+                to_user=req.user,
+                status=FriendRequest.StatusChoices.PENDING
+            ).first()
 
         if friendRequest:
             friendRequest.status = FriendRequest.StatusChoices.ACCEPTED
