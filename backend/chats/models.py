@@ -5,6 +5,7 @@ class Message(models.Model):
     sender  = models.ForeignKey(to=User , on_delete=models.CASCADE  ,related_name='sent_message')
     receiver  = models.ForeignKey(to=User , on_delete=models.CASCADE , related_name='receive_message' )
     text_message = models.CharField(max_length=255 , null= True , blank=True )
+    image = models.URLField(null=True , blank=True)
 
 
 class FriendRequest(models.Model):

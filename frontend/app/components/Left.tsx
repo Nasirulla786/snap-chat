@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import axios from 'axios'
 import { ServerURL } from '../page'
+import { useRouter } from 'next/navigation'
 
 interface User {
     id: number
@@ -104,6 +105,9 @@ const Left = () => {
         fetchMyFriends()
 
     },[])
+
+
+    const router = useRouter()
 
 
     return (
@@ -226,17 +230,19 @@ const Left = () => {
                 <div className="w-full min-h-screen">
 
                     {
-                       homeChats.length!=0 &&  homeChats.map((user)=>{
+                       homeChats.length!=0 &&  homeChats.map((user :any)=>{
+
                             return(
-                                  <div className="flex items-center justify-between p-3 bg-gray-900">
+                                  <div onClick={()=>router.push('/chat-detail/'+user?.id)} className="flex items-center justify-between p-3 cursor-pointer bg-gray-900" key={user.id}>
 
                         <div className="flex items-center gap-3">
 
                             <div className="w-9 h-9 rounded-full bg-gray-500 flex items-center justify-center">
 
-                                <span>
-                                    S
-                                </span>
+{user?.image?
+<img src={user?.image} alt="None" className='w-full h-full object-cover rounded-full' />:<span>D</span>}
+
+
 
                             </div>
 

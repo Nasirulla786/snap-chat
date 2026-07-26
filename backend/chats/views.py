@@ -2,46 +2,40 @@ from django.shortcuts import render, get_object_or_404
 from rest_framework.views import APIView
 from django.contrib.auth.models import User
 from rest_framework.response import Response
-from .serializer import UserSerializer , FriendSerializer
+from .serializer import UserSerializer, FriendSerializer , MessagesSerializer
 from rest_framework.response import Response
-from .models import FriendRequest
+from .models import FriendRequest, Message
 from django.db.models import Q
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
-
-
+import cloudinary.uploader
 
 @permission_classes([IsAuthenticated])
 class AddFriend(APIView):
-    def get(self , request , id):
+    def get(self, request, id):
 
         if id == request.user.id:
-            return Response({"message":"U cant add yourself"})
-        to_user = get_object_or_404(User , pk=id)
+            return Response({"message": "U cant add yourself"})
+        to_user = get_object_or_404(User, pk=id)
         friend = FriendRequest.objects.filter(
-            Q(from_user=request.user.id, to_user=to_user.id) |
-            Q(from_user=to_user.id, to_user=request.user.id)
+            Q(from_user=request.user.id, to_user=to_user.id)
+            | Q(from_user=to_user.id, to_user=request.user.id)
         ).exists()
 
         if friend:
-            return Response({"message":"U already sent request.."})
+            return Response({"message": "U already sent request.."})
 
-        FriendRequest.objects.create(
-            from_user = request.user,to_user=to_user
-        )
+        FriendRequest.objects.create(from_user=request.user, to_user=to_user)
 
-        return Response({"message":"Request Sent" , "status":"pending"})
-    
+        return Response({"message": "Request Sent", "status": "pending"})
+
 
 class getMyFriends(APIView):
     def get(self, req):
 
         my_friends = FriendRequest.objects.filter(
             status=FriendRequest.StatusChoices.ACCEPTED
-        ).filter(
-            Q(from_user=req.user) | Q(to_user=req.user)
-        )
-
+        ).filter(Q(from_user=req.user) | Q(to_user=req.user))
 
         friends = []
 
@@ -52,13 +46,58 @@ class getMyFriends(APIView):
             else:
                 friends.append(friend.from_user)
 
+        serializer = UserSerializer(friends, many=True)
 
-        serializer = UserSerializer(
-            friends,
-            many=True
+        return Response({"data": serializer.data})
+
+
+class ChatFriend(APIView):
+    def get(self, req, id):
+        friend = get_object_or_404(User, pk=id)
+
+        if not friend:
+            return Response({"message": "friend does not exist"})
+
+        serializeData = UserSerializer(friend)
+
+        messages = Message.objects.filter(
+            Q(sender=friend, receiver=req.user)
+            | Q(sender=req.user, receiver=friend)
         )
 
 
-        return Response({
-            "data": serializer.data
-        })
+        serializeMessage = MessagesSerializer(messages , many=True)
+
+
+        return Response({"friend": serializeData.data ,"messages":serializeMessage.data})
+
+
+
+class SendMessage(APIView):
+    def post(self, req, id):
+        text = req.data.get("message")
+        image = req.FILES.get("image")
+
+        friend = get_object_or_404(User, pk=id)
+        sender = req.user
+
+
+        image_url = None
+
+        if image:
+            upload = cloudinary.uploader.upload(
+                image,
+                resource_type="image"
+            )
+
+            image_url = upload["secure_url"]
+
+        if text or image:
+            message = Message.objects.create(
+                sender=sender,
+                receiver=friend,
+                text_message=text,
+                image=image_url
+            )
+
+        return Response({"message": "Message sent"})
