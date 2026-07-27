@@ -226,7 +226,7 @@ const getCurrentUser = async () => {
 
   return (
     // Poori screen ka wrapper - Snapchat Web jaisa dark theme
-    <div className="h-screen w-full flex flex-col bg-[#0d0d0d] text-white overflow-hidden relative">
+    <div className="h-[100dvh] w-full flex flex-col bg-[#0d0d0d] text-white overflow-hidden relative">
 
 
 
@@ -385,10 +385,10 @@ const getCurrentUser = async () => {
                   friend.image ||
                   "https://ui-avatars.com/api/?name=" + friend.username
                 }
-                className="w-9 h-9 rounded-full object-cover"
+                className="w-9 h-9 rounded-full object-cover shrink-0"
               />
 
-              <h1 className="font-bold text-[15px]">
+              <h1 className="font-bold text-[15px] truncate max-w-[120px] sm:max-w-none">
                 {friend.username}
               </h1>
             </>
@@ -397,15 +397,15 @@ const getCurrentUser = async () => {
         </div>
 
 
-        {/* Right side icons - sirf UI ke liye (Call / Video / Play) */}
-        <div className="flex items-center gap-2">
+        {/* Right side icons */}
+        <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
 
           <button className="
             flex items-center gap-1.5
             bg-neutral-800
-            px-3 py-2
+            px-2.5 sm:px-3 py-2
             rounded-full
-            text-sm
+            text-xs sm:text-sm
           " onClick={() => {
 
   if (
@@ -428,14 +428,15 @@ const getCurrentUser = async () => {
 
 }}>
             Call
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="white" className="hidden sm:inline">
               <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 3.5v-11l-4 3.5z" />
             </svg>
           </button>
 
           <button className="
+            hidden sm:flex
             w-9 h-9
-            flex items-center justify-center
+            items-center justify-center
             rounded-full
             bg-neutral-800
           ">
@@ -445,8 +446,9 @@ const getCurrentUser = async () => {
           </button>
 
           <button className="
+            hidden sm:flex
             w-9 h-9
-            flex items-center justify-center
+            items-center justify-center
             rounded-full
             bg-neutral-800
           ">
@@ -664,9 +666,11 @@ const getCurrentUser = async () => {
       <footer
         className="
           flex items-center gap-2
-          px-4 py-3
+          px-3 sm:px-4 py-3
+          pb-[max(0.75rem,env(safe-area-inset-bottom))]
           bg-[#0d0d0d]
           border-t border-neutral-800
+          shrink-0
         "
       >
 

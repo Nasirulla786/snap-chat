@@ -137,7 +137,7 @@ const Right = () => {
     const activeComments = openCommentId ? commentsMap[openCommentId] || [] : []
 
     return (
-        <section className="right hidden md:flex flex-col items-center gap-4 bg-black h-screen overflow-y-scroll snap-y snap-mandatory relative py-4">
+        <section className="right flex flex-col items-center gap-4 bg-black h-full md:h-screen overflow-y-auto snap-y snap-mandatory relative py-4 pb-6 md:pb-4">
 
             {reelData?.reels?.length ? (
 
@@ -155,7 +155,7 @@ const Right = () => {
                     return (
                         <div
                             key={item.id}
-                            className="relative w-[320px] h-[568px] rounded-[28px] overflow-hidden bg-neutral-900 snap-start shrink-0 border-[3px] border-black shadow-[0_0_0_1px_rgba(255,255,255,0.06)]"
+                            className="relative w-full max-w-[360px] md:w-[320px] h-[calc(100dvh-120px)] md:h-[568px] rounded-2xl md:rounded-[28px] overflow-hidden bg-neutral-900 snap-start shrink-0 border-[3px] border-black shadow-[0_0_0_1px_rgba(255,255,255,0.06)] mx-auto"
                         >
 
                             {/* Video */}
@@ -242,7 +242,7 @@ const Right = () => {
                     onClick={() => setOpenCommentId(null)}
                 >
                     <div
-                        className="w-full max-w-sm bg-[#0A0A0A] rounded-t-3xl h-[65%] flex flex-col"
+                        className="w-full max-w-sm md:max-w-sm bg-[#0A0A0A] rounded-t-3xl h-[75dvh] md:h-[65%] flex flex-col pb-[env(safe-area-inset-bottom,0px)]"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <div className="flex justify-center pt-2.5 pb-1">

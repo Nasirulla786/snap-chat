@@ -200,26 +200,17 @@ class ChatConsumer(WebsocketConsumer):
             self.user.username
         )
 
+        payload = {
+            "type": "message",
+            "message": event.get("message", ""),
+            "sender": event["sender"],
+        }
+
+        if event.get("image"):
+            payload["image"] = event["image"]
 
         self.send(
-
-            text_data=json.dumps(
-
-                {
-
-                    "type":
-                        "message",
-
-                    "message":
-                        event["message"],
-
-                    "sender":
-                        event["sender"],
-
-                }
-
-            )
-
+            text_data=json.dumps(payload)
         )
 
 

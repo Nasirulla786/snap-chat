@@ -2,6 +2,8 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { ServerURL } from "@/app/page";
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
 
 interface Snap {
   id: number;
@@ -72,15 +74,24 @@ const MySnap = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#0f0f0f] text-white">
+    <div className="min-h-[100dvh] bg-[#0f0f0f] text-white">
       {/* Header */}
-      <div className="sticky top-0 z-50 border-b border-zinc-800 bg-black/80 backdrop-blur-md">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-          <h1 className="text-3xl font-bold text-yellow-400">
-            👻 My Memories
-          </h1>
+      <div className="sticky top-0 z-50 border-b border-zinc-800 bg-black/80 backdrop-blur-md pt-[env(safe-area-inset-top,0px)]">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 py-4 sm:py-5">
+          <div className="flex items-center gap-3 min-w-0">
+            <Link
+              href="/"
+              className="w-9 h-9 shrink-0 flex items-center justify-center rounded-full bg-zinc-800 text-white active:scale-95 transition-transform"
+              aria-label="Back to home"
+            >
+              <ArrowLeft size={18} />
+            </Link>
+            <h1 className="text-xl sm:text-3xl font-bold text-yellow-400 truncate">
+              👻 My Memories
+            </h1>
+          </div>
 
-          <div className="rounded-full bg-zinc-900 px-4 py-2 text-sm font-medium">
+          <div className="rounded-full bg-zinc-900 px-3 sm:px-4 py-1.5 sm:py-2 text-xs sm:text-sm font-medium shrink-0">
             {snaps.length} Snaps
           </div>
         </div>
@@ -100,17 +111,17 @@ const MySnap = () => {
           </p>
         </div>
       ) : (
-        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-6 p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <div className="mx-auto grid max-w-7xl grid-cols-1 gap-4 sm:gap-6 p-4 sm:p-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {snaps.map((snap) => (
             <div
               key={snap.id}
-              className="group overflow-hidden rounded-3xl bg-zinc-900 shadow-xl transition duration-300 hover:-translate-y-2 hover:shadow-yellow-400/20"
+              className="group overflow-hidden rounded-2xl sm:rounded-3xl bg-zinc-900 shadow-xl transition duration-300 hover:-translate-y-2 hover:shadow-yellow-400/20"
             >
               <div className="relative">
                 <img
                   src={snap.image}
                   alt="Snap"
-                  className="h-[420px] w-full object-cover transition duration-500 group-hover:scale-110"
+                  className="h-[280px] sm:h-[420px] w-full object-cover transition duration-500 group-hover:scale-110"
                 />
 
                 <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />

@@ -8,1029 +8,1033 @@ import { ServerURL } from "@/app/page";
 const Page = () => {
 
 
-const params = useParams();
-const router = useRouter();
+    const params = useParams();
+    const router = useRouter();
 
-const friendId = Number(params.id);
+    const friendId = Number(params.id);
 
 
-const [currentUserId, setCurrentUserId] =
-    useState<number | null>(null);
+    const [currentUserId, setCurrentUserId] =
+        useState<number | null>(null);
 
-const [isConnected, setIsConnected] =
-    useState(false);
+    const [isConnected, setIsConnected] =
+        useState(false);
 
-const [micOn, setMicOn] =
-    useState(true);
+    const [micOn, setMicOn] =
+        useState(true);
 
-const [cameraOn, setCameraOn] =
-    useState(true);
+    const [cameraOn, setCameraOn] =
+        useState(true);
 
 
-const localVideoRef =
-    useRef<HTMLVideoElement>(null);
+    const localVideoRef =
+        useRef<HTMLVideoElement>(null);
 
-const remoteVideoRef =
-    useRef<HTMLVideoElement>(null);
+    const remoteVideoRef =
+        useRef<HTMLVideoElement>(null);
 
 
-const socketRef =
-    useRef<WebSocket | null>(null);
+    const socketRef =
+        useRef<WebSocket | null>(null);
 
-const peerRef =
-    useRef<RTCPeerConnection | null>(null);
+    const peerRef =
+        useRef<RTCPeerConnection | null>(null);
 
-const streamRef =
-    useRef<MediaStream | null>(null);
+    const streamRef =
+        useRef<MediaStream | null>(null);
 
 
-const pendingCandidatesRef =
-    useRef<RTCIceCandidateInit[]>([]);
+    const pendingCandidatesRef =
+        useRef<RTCIceCandidateInit[]>([]);
 
 
-const startedRef =
-    useRef(false);
+    const startedRef =
+        useRef(false);
 
 
-const offerCreatedRef =
-    useRef(false);
+    const offerCreatedRef =
+        useRef(false);
 
 
-// =========================
-// GET CURRENT USER
-// =========================
+    // =========================
+    // GET CURRENT USER
+    // =========================
 
-const getCurrentUser = async () => {
+    const getCurrentUser = async () => {
 
-    try {
+        try {
 
-        const res = await axios.get(
-            `${ServerURL}/api/current-user/`,
-            {
-                withCredentials: true,
-            }
-        );
+            const res = await axios.get(
+                `${ServerURL}/api/current-user/`,
+                {
+                    withCredentials: true,
+                }
+            );
 
 
-        const userId =
-            res.data.user?.id ||
-            res.data.id;
+            const userId =
+                res.data.user?.id ||
+                res.data.id;
 
 
-        console.log(
-            "MY USER ID:",
-            userId
-        );
+            console.log(
+                "MY USER ID:",
+                userId
+            );
 
 
-        setCurrentUserId(
-            Number(userId)
-        );
+            setCurrentUserId(
+                Number(userId)
+            );
 
 
-        return Number(userId);
+            return Number(userId);
 
 
-    } catch (error) {
+        } catch (error) {
 
-        console.log(
-            "CURRENT USER ERROR:",
-            error
-        );
+            console.log(
+                "CURRENT USER ERROR:",
+                error
+            );
 
-        return null;
+            return null;
 
-    }
+        }
 
-};
+    };
 
 
-// =========================
-// CREATE OFFER
-// =========================
+    // =========================
+    // CREATE OFFER
+    // =========================
 
-const createOffer = async () => {
+    const createOffer = async () => {
 
-    const peer =
-        peerRef.current;
+        const peer =
+            peerRef.current;
 
-    const socket =
-        socketRef.current;
+        const socket =
+            socketRef.current;
 
 
-    if (!peer || !socket) {
-
-        return;
-
-    }
-
-
-    if (
-        socket.readyState !==
-        WebSocket.OPEN
-    ) {
-
-        return;
-
-    }
-
-
-    if (
-        offerCreatedRef.current
-    ) {
-
-        return;
-
-    }
-
-
-    if (
-        peer.signalingState !==
-        "stable"
-    ) {
-
-        return;
-
-    }
-
-
-    offerCreatedRef.current =
-        true;
-
-
-    console.log(
-        "CREATING OFFER"
-    );
-
-
-    const offer =
-        await peer.createOffer();
-
-
-    await peer.setLocalDescription(
-        offer
-    );
-
-
-    socket.send(
-
-        JSON.stringify({
-
-            type: "offer",
-
-            offer: offer,
-
-        })
-
-    );
-
-
-    console.log(
-        "OFFER SENT"
-    );
-
-};
-
-
-// =========================
-// START CALL
-// =========================
-
-const startCall = async () => {
-
-    try {
-
-        console.log(
-            "STARTING CALL"
-        );
-
-
-        // -------------------------
-        // CURRENT USER
-        // -------------------------
-
-        const userId =
-            await getCurrentUser();
-
-
-        if (!userId) {
+        if (!peer || !socket) {
 
             return;
 
         }
 
 
-        setCurrentUserId(
-            userId
-        );
-
-
-        console.log(
-            "MY ID:",
-            userId
-        );
-
-        console.log(
-            "FRIEND ID:",
-            friendId
-        );
-
-
-        // -------------------------
-        // CAMERA + MIC
-        // -------------------------
-
-        console.log(
-            "CAMERA PERMISSION MANG RAHA HUN"
-        );
-
-
-        const stream =
-            await navigator.mediaDevices.getUserMedia({
-
-                video: true,
-
-                audio: true,
-
-            });
-
-
-        console.log(
-            "CAMERA STREAM MIL GAYI",
-            stream
-        );
-
-
-        streamRef.current =
-            stream;
-
-
         if (
-            localVideoRef.current
+            socket.readyState !==
+            WebSocket.OPEN
         ) {
 
-            localVideoRef.current.srcObject =
-                stream;
-
-
-            await localVideoRef.current.play();
-
-
-            console.log(
-                "LOCAL VIDEO ATTACHED"
-            );
+            return;
 
         }
 
 
-        // -------------------------
-        // PEER CONNECTION
-        // -------------------------
+        if (
+            offerCreatedRef.current
+        ) {
 
-        const peer =
-            new RTCPeerConnection({
+            return;
 
-                iceServers: [
-
-                    {
-                        urls:
-                            "stun:stun.l.google.com:19302",
-                    },
-
-                ],
-
-            });
+        }
 
 
-        peerRef.current =
-            peer;
+        if (
+            peer.signalingState !==
+            "stable"
+        ) {
+
+            return;
+
+        }
 
 
-        // -------------------------
-        // ADD LOCAL TRACKS
-        // -------------------------
+        offerCreatedRef.current =
+            true;
 
-        stream
-            .getTracks()
-            .forEach(
 
-                (track) => {
+        console.log(
+            "CREATING OFFER"
+        );
 
-                    peer.addTrack(
-                        track,
-                        stream
-                    );
 
-                }
+        const offer =
+            await peer.createOffer();
 
+
+        await peer.setLocalDescription(
+            offer
+        );
+
+
+        socket.send(
+
+            JSON.stringify({
+
+                type: "offer",
+
+                offer: offer,
+
+            })
+
+        );
+
+
+        console.log(
+            "OFFER SENT"
+        );
+
+    };
+
+
+    // =========================
+    // START CALL
+    // =========================
+
+    const startCall = async () => {
+
+        try {
+
+            console.log(
+                "STARTING CALL"
             );
 
 
-        // -------------------------
-        // REMOTE VIDEO
-        // -------------------------
+            // -------------------------
+            // CURRENT USER
+            // -------------------------
 
-        peer.ontrack =
-            async (event) => {
+            const userId =
+                await getCurrentUser();
+
+
+            if (!userId) {
+
+                return;
+
+            }
+
+
+            setCurrentUserId(
+                userId
+            );
+
+
+            console.log(
+                "MY ID:",
+                userId
+            );
+
+            console.log(
+                "FRIEND ID:",
+                friendId
+            );
+
+
+            // -------------------------
+            // CAMERA + MIC
+            // -------------------------
+
+            console.log(
+                "CAMERA PERMISSION MANG RAHA HUN"
+            );
+
+
+            const stream =
+                await navigator.mediaDevices.getUserMedia({
+
+                    video: true,
+
+                    audio: true,
+
+                });
+
+
+            console.log(
+                "CAMERA STREAM MIL GAYI",
+                stream
+            );
+
+
+            streamRef.current =
+                stream;
+
+
+            if (
+                localVideoRef.current
+            ) {
+
+                localVideoRef.current.srcObject =
+                    stream;
+
+
+                await localVideoRef.current.play();
+
 
                 console.log(
-                    "REMOTE STREAM RECEIVED"
+                    "LOCAL VIDEO ATTACHED"
                 );
 
-
-                const remoteStream =
-                    event.streams[0];
+            }
 
 
-                if (
-                    remoteVideoRef.current
-                ) {
+            // -------------------------
+            // PEER CONNECTION
+            // -------------------------
 
-                    remoteVideoRef.current.srcObject =
-                        remoteStream;
+            const peer =
+                new RTCPeerConnection({
+
+                    iceServers: [
+
+                        {
+                            urls:
+                                "stun:stun.l.google.com:19302",
+                        },
+
+                    ],
+
+                });
 
 
-                    try {
+            peerRef.current =
+                peer;
 
-                        await remoteVideoRef.current.play();
 
-                    } catch (error) {
+            // -------------------------
+            // ADD LOCAL TRACKS
+            // -------------------------
 
-                        console.log(
-                            "REMOTE VIDEO PLAY ERROR:",
-                            error
+            stream
+                .getTracks()
+                .forEach(
+
+                    (track) => {
+
+                        peer.addTrack(
+                            track,
+                            stream
                         );
 
                     }
 
-                }
-
-            };
-
-
-        // -------------------------
-        // ICE CANDIDATES
-        // -------------------------
-
-        peer.onicecandidate =
-            (event) => {
-
-                if (
-                    !event.candidate
-                ) {
-
-                    return;
-
-                }
-
-
-                const socket =
-                    socketRef.current;
-
-
-                if (
-                    socket &&
-                    socket.readyState ===
-                    WebSocket.OPEN
-                ) {
-
-                    socket.send(
-
-                        JSON.stringify({
-
-                            type:
-                                "ice-candidate",
-
-                            candidate:
-                                event.candidate,
-
-                        })
-
-                    );
-
-                }
-
-            };
-
-
-        // -------------------------
-        // WEBSOCKET
-        // -------------------------
-
-        const socket =
-            new WebSocket(
-
-                `ws://localhost:8000/ws/call/${friendId}/`
-
-            );
-
-
-        socketRef.current =
-            socket;
-
-
-        // -------------------------
-        // SOCKET OPEN
-        // -------------------------
-
-        socket.onopen =
-            () => {
-
-                console.log(
-                    "CALL WEBSOCKET CONNECTED"
                 );
 
 
-                setIsConnected(
-                    true
-                );
+            // -------------------------
+            // REMOTE VIDEO
+            // -------------------------
 
-            };
-
-
-        // -------------------------
-        // RECEIVE SIGNALING
-        // -------------------------
-
-        socket.onmessage =
-            async (event) => {
-
-                try {
-
-                    const data =
-                        JSON.parse(
-                            event.data
-                        );
-
+            peer.ontrack =
+                async (event) => {
 
                     console.log(
-                        "RECEIVED:",
-                        data.type
+                        "REMOTE STREAM RECEIVED"
                     );
 
 
-                    // =====================
-                    // PEER JOINED
-                    // =====================
+                    const remoteStream =
+                        event.streams[0];
+
 
                     if (
-                        data.type ===
-                        "peer-joined"
+                        remoteVideoRef.current
                     ) {
 
-                        console.log(
-                            "PEER JOINED:",
-                            data.user_id
-                        );
+                        remoteVideoRef.current.srcObject =
+                            remoteStream;
 
 
-                        /*
-                          Smaller ID user
-                          offer create karega.
+                        try {
 
-                          Example:
+                            await remoteVideoRef.current.play();
 
-                          User 10
-                          User 15
+                        } catch (error) {
 
-                          User 10 -> OFFER
-                          User 15 -> ANSWER
-                        */
-
-
-                        if (
-                            userId < friendId &&
-                            data.user_id !== userId
-                        ) {
-
-                            await createOffer();
+                            console.log(
+                                "REMOTE VIDEO PLAY ERROR:",
+                                error
+                            );
 
                         }
 
+                    }
+
+                };
+
+
+            // -------------------------
+            // ICE CANDIDATES
+            // -------------------------
+
+            peer.onicecandidate =
+                (event) => {
+
+                    if (
+                        !event.candidate
+                    ) {
 
                         return;
 
                     }
 
 
-                    // =====================
-                    // OFFER
-                    // =====================
+                    const socket =
+                        socketRef.current;
+
 
                     if (
-                        data.type ===
-                        "offer"
+                        socket &&
+                        socket.readyState ===
+                        WebSocket.OPEN
                     ) {
-
-                        console.log(
-                            "OFFER RECEIVED"
-                        );
-
-
-                        if (
-                            peer.signalingState !==
-                            "stable"
-                        ) {
-
-                            console.log(
-                                "OFFER IGNORED"
-                            );
-
-                            return;
-
-                        }
-
-
-                        await peer.setRemoteDescription(
-
-                            new RTCSessionDescription(
-                                data.offer
-                            )
-
-                        );
-
-
-                        // Add pending ICE
-
-                        for (
-
-                            const candidate
-                            of pendingCandidatesRef.current
-
-                        ) {
-
-                            try {
-
-                                await peer.addIceCandidate(
-
-                                    new RTCIceCandidate(
-                                        candidate
-                                    )
-
-                                );
-
-                            } catch (error) {
-
-                                console.log(
-                                    "PENDING ICE ERROR:",
-                                    error
-                                );
-
-                            }
-
-                        }
-
-
-                        pendingCandidatesRef.current =
-                            [];
-
-
-                        const answer =
-                            await peer.createAnswer();
-
-
-                        await peer.setLocalDescription(
-                            answer
-                        );
-
 
                         socket.send(
 
                             JSON.stringify({
 
                                 type:
-                                    "answer",
+                                    "ice-candidate",
 
-                                answer:
-
-                                    peer.localDescription,
+                                candidate:
+                                    event.candidate,
 
                             })
 
                         );
 
-
-                        console.log(
-                            "ANSWER SENT"
-                        );
-
-
-                        return;
-
                     }
 
+                };
 
-                    // =====================
-                    // ANSWER
-                    // =====================
 
-                    if (
-                        data.type ===
-                        "answer"
-                    ) {
+            // -------------------------
+            // WEBSOCKET
+            // -------------------------
+
+            const socket =
+                new WebSocket(
+
+                    `ws://localhost:8000/ws/call/${friendId}/`
+
+                );
+
+
+            socketRef.current =
+                socket;
+
+
+            // -------------------------
+            // SOCKET OPEN
+            // -------------------------
+
+            socket.onopen =
+                () => {
+
+                    console.log(
+                        "CALL WEBSOCKET CONNECTED"
+                    );
+
+
+                    setIsConnected(
+                        true
+                    );
+
+                };
+
+
+            // -------------------------
+            // RECEIVE SIGNALING
+            // -------------------------
+
+            socket.onmessage =
+                async (event) => {
+
+                    try {
+
+                        const data =
+                            JSON.parse(
+                                event.data
+                            );
+
 
                         console.log(
-                            "ANSWER RECEIVED"
+                            "RECEIVED:",
+                            data.type
                         );
 
 
+                        // =====================
+                        // PEER JOINED
+                        // =====================
+
                         if (
-                            peer.signalingState !==
-                            "have-local-offer"
+                            data.type ===
+                            "peer-joined"
                         ) {
 
                             console.log(
-                                "ANSWER IGNORED"
+                                "PEER JOINED:",
+                                data.user_id
                             );
+
+
+                            /*
+                              Smaller ID user
+                              offer create karega.
+
+                              Example:
+
+                              User 10
+                              User 15
+
+                              User 10 -> OFFER
+                              User 15 -> ANSWER
+                            */
+
+
+                            if (
+                                userId < friendId &&
+                                data.user_id !== userId
+                            ) {
+
+                                await createOffer();
+
+                            }
+
 
                             return;
 
                         }
 
 
-                        await peer.setRemoteDescription(
-
-                            new RTCSessionDescription(
-                                data.answer
-                            )
-
-                        );
-
-
-                        // Add pending ICE
-
-                        for (
-
-                            const candidate
-                            of pendingCandidatesRef.current
-
-                        ) {
-
-                            try {
-
-                                await peer.addIceCandidate(
-
-                                    new RTCIceCandidate(
-                                        candidate
-                                    )
-
-                                );
-
-                            } catch (error) {
-
-                                console.log(
-                                    "PENDING ICE ERROR:",
-                                    error
-                                );
-
-                            }
-
-                        }
-
-
-                        pendingCandidatesRef.current =
-                            [];
-
-
-                        console.log(
-                            "REMOTE ANSWER SET"
-                        );
-
-
-                        return;
-
-                    }
-
-
-                    // =====================
-                    // ICE CANDIDATE
-                    // =====================
-
-                    if (
-                        data.type ===
-                        "ice-candidate"
-                    ) {
-
-                        const candidate =
-                            data.candidate;
-
+                        // =====================
+                        // OFFER
+                        // =====================
 
                         if (
-                            peer.remoteDescription
+                            data.type ===
+                            "offer"
                         ) {
 
-                            try {
+                            console.log(
+                                "OFFER RECEIVED"
+                            );
 
-                                await peer.addIceCandidate(
 
-                                    new RTCIceCandidate(
-                                        candidate
-                                    )
+                            if (
+                                peer.signalingState !==
+                                "stable"
+                            ) {
 
+                                console.log(
+                                    "OFFER IGNORED"
+                                );
+
+                                return;
+
+                            }
+
+
+                            await peer.setRemoteDescription(
+
+                                new RTCSessionDescription(
+                                    data.offer
+                                )
+
+                            );
+
+
+                            // Add pending ICE
+
+                            for (
+
+                                const candidate
+                                of pendingCandidatesRef.current
+
+                            ) {
+
+                                try {
+
+                                    await peer.addIceCandidate(
+
+                                        new RTCIceCandidate(
+                                            candidate
+                                        )
+
+                                    );
+
+                                } catch (error) {
+
+                                    console.log(
+                                        "PENDING ICE ERROR:",
+                                        error
+                                    );
+
+                                }
+
+                            }
+
+
+                            pendingCandidatesRef.current =
+                                [];
+
+
+                            const answer =
+                                await peer.createAnswer();
+
+
+                            await peer.setLocalDescription(
+                                answer
+                            );
+
+
+                            socket.send(
+
+                                JSON.stringify({
+
+                                    type:
+                                        "answer",
+
+                                    answer:
+
+                                        peer.localDescription,
+
+                                })
+
+                            );
+
+
+                            console.log(
+                                "ANSWER SENT"
+                            );
+
+
+                            return;
+
+                        }
+
+
+                        // =====================
+                        // ANSWER
+                        // =====================
+
+                        if (
+                            data.type ===
+                            "answer"
+                        ) {
+
+                            console.log(
+                                "ANSWER RECEIVED"
+                            );
+
+
+                            if (
+                                peer.signalingState !==
+                                "have-local-offer"
+                            ) {
+
+                                console.log(
+                                    "ANSWER IGNORED"
+                                );
+
+                                return;
+
+                            }
+
+
+                            await peer.setRemoteDescription(
+
+                                new RTCSessionDescription(
+                                    data.answer
+                                )
+
+                            );
+
+
+                            // Add pending ICE
+
+                            for (
+
+                                const candidate
+                                of pendingCandidatesRef.current
+
+                            ) {
+
+                                try {
+
+                                    await peer.addIceCandidate(
+
+                                        new RTCIceCandidate(
+                                            candidate
+                                        )
+
+                                    );
+
+                                } catch (error) {
+
+                                    console.log(
+                                        "PENDING ICE ERROR:",
+                                        error
+                                    );
+
+                                }
+
+                            }
+
+
+                            pendingCandidatesRef.current =
+                                [];
+
+
+                            console.log(
+                                "REMOTE ANSWER SET"
+                            );
+
+
+                            return;
+
+                        }
+
+
+                        // =====================
+                        // ICE CANDIDATE
+                        // =====================
+
+                        if (
+                            data.type ===
+                            "ice-candidate"
+                        ) {
+
+                            const candidate =
+                                data.candidate;
+
+
+                            if (
+                                peer.remoteDescription
+                            ) {
+
+                                try {
+
+                                    await peer.addIceCandidate(
+
+                                        new RTCIceCandidate(
+                                            candidate
+                                        )
+
+                                    );
+
+
+                                    console.log(
+                                        "ICE CANDIDATE ADDED"
+                                    );
+
+
+                                } catch (error) {
+
+                                    console.log(
+                                        "ICE ERROR:",
+                                        error
+                                    );
+
+                                }
+
+
+                            } else {
+
+                                console.log(
+                                    "ICE CANDIDATE SAVED"
                                 );
 
 
-                                console.log(
-                                    "ICE CANDIDATE ADDED"
-                                );
-
-
-                            } catch (error) {
-
-                                console.log(
-                                    "ICE ERROR:",
-                                    error
+                                pendingCandidatesRef.current.push(
+                                    candidate
                                 );
 
                             }
 
 
-                        } else {
-
-                            console.log(
-                                "ICE CANDIDATE SAVED"
-                            );
-
-
-                            pendingCandidatesRef.current.push(
-                                candidate
-                            );
+                            return;
 
                         }
 
+                    } catch (error) {
 
-                        return;
+                        console.log(
+                            "SIGNALING ERROR:",
+                            error
+                        );
 
                     }
 
-                } catch (error) {
+                };
+
+
+            // -------------------------
+            // SOCKET CLOSE
+            // -------------------------
+
+            socket.onclose =
+                () => {
 
                     console.log(
-                        "SIGNALING ERROR:",
+                        "CALL WEBSOCKET DISCONNECTED"
+                    );
+
+
+                    setIsConnected(
+                        false
+                    );
+
+                };
+
+
+            socket.onerror =
+                (error) => {
+
+                    console.log(
+                        "WEBSOCKET ERROR:",
                         error
                     );
 
-                }
-
-            };
+                };
 
 
-        // -------------------------
-        // SOCKET CLOSE
-        // -------------------------
+        } catch (error) {
 
-        socket.onclose =
-            () => {
+            console.log(
+                "CALL START ERROR:",
+                error
+            );
 
-                console.log(
-                    "CALL WEBSOCKET DISCONNECTED"
-                );
+        }
 
-
-                setIsConnected(
-                    false
-                );
-
-            };
+    };
 
 
-        socket.onerror =
-            (error) => {
+    // =========================
+    // CLEANUP
+    // =========================
 
-                console.log(
-                    "WEBSOCKET ERROR:",
-                    error
-                );
-
-            };
-
-
-    } catch (error) {
+    const cleanupCall = () => {
 
         console.log(
-            "CALL START ERROR:",
-            error
+            "CLEANUP CALL"
         );
 
-    }
 
-};
+        streamRef.current
+            ?.getTracks()
+            .forEach(
 
+                (track) => {
 
-// =========================
-// CLEANUP
-// =========================
+                    track.stop();
 
-const cleanupCall = () => {
+                }
 
-    console.log(
-        "CLEANUP CALL"
-    );
+            );
 
 
-    streamRef.current
-        ?.getTracks()
-        .forEach(
+        peerRef.current
+            ?.close();
 
-            (track) => {
 
-                track.stop();
+        if (
+            socketRef.current &&
+            socketRef.current.readyState !==
+            WebSocket.CLOSED
+        ) {
+
+            socketRef.current.close();
+
+        }
+
+
+        streamRef.current =
+            null;
+
+        peerRef.current =
+            null;
+
+        socketRef.current =
+            null;
+
+
+        offerCreatedRef.current =
+            false;
+
+    };
+
+
+    // =========================
+    // USE EFFECT
+    // =========================
+
+    useEffect(
+
+        () => {
+
+            if (
+                startedRef.current
+            ) {
+
+                return;
 
             }
 
-        );
+
+            startedRef.current =
+                true;
 
 
-    peerRef.current
-        ?.close();
+            startCall();
 
 
-    if (
-        socketRef.current &&
-        socketRef.current.readyState !==
-        WebSocket.CLOSED
-    ) {
+            return () => {
 
-        socketRef.current.close();
+                cleanupCall();
 
-    }
+            };
 
+        },
 
-    streamRef.current =
-        null;
+        []
 
-    peerRef.current =
-        null;
-
-    socketRef.current =
-        null;
+    );
 
 
-    offerCreatedRef.current =
-        false;
+    // =========================
+    // TOGGLE MIC
+    // =========================
 
-};
+    const toggleMic =
+        () => {
 
-
-// =========================
-// USE EFFECT
-// =========================
-
-useEffect(
-
-    () => {
-
-        if (
-            startedRef.current
-        ) {
-
-            return;
-
-        }
+            const audioTrack =
+                streamRef.current
+                    ?.getAudioTracks()[0];
 
 
-        startedRef.current =
-            true;
+            if (
+                audioTrack
+            ) {
+
+                audioTrack.enabled =
+                    !audioTrack.enabled;
 
 
-        startCall();
+                setMicOn(
+                    audioTrack.enabled
+                );
 
-
-        return () => {
-
-            cleanupCall();
+            }
 
         };
 
-    },
 
-    []
+    // =========================
+    // TOGGLE CAMERA
+    // =========================
 
-);
+    const toggleCamera =
+        () => {
 
-
-// =========================
-// TOGGLE MIC
-// =========================
-
-const toggleMic =
-    () => {
-
-        const audioTrack =
-            streamRef.current
-                ?.getAudioTracks()[0];
+            const videoTrack =
+                streamRef.current
+                    ?.getVideoTracks()[0];
 
 
-        if (
-            audioTrack
-        ) {
+            if (
+                videoTrack
+            ) {
 
-            audioTrack.enabled =
-                !audioTrack.enabled;
-
-
-            setMicOn(
-                audioTrack.enabled
-            );
-
-        }
-
-    };
+                videoTrack.enabled =
+                    !videoTrack.enabled;
 
 
-// =========================
-// TOGGLE CAMERA
-// =========================
+                setCameraOn(
+                    videoTrack.enabled
+                );
 
-const toggleCamera =
-    () => {
+            }
 
-        const videoTrack =
-            streamRef.current
-                ?.getVideoTracks()[0];
+        };
 
 
-        if (
-            videoTrack
-        ) {
+    // =========================
+    // END CALL
+    // =========================
 
-            videoTrack.enabled =
-                !videoTrack.enabled;
+    const endCall =
+        () => {
 
+            cleanupCall();
 
-            setCameraOn(
-                videoTrack.enabled
-            );
+            router.back();
 
-        }
-
-    };
+        };
 
 
-// =========================
-// END CALL
-// =========================
+    return (
 
-const endCall =
-    () => {
-
-        cleanupCall();
-
-        router.back();
-
-    };
-
-
-return (
-
-    <div
-        className="
-            h-screen
+        <div
+            className="
+            h-[100dvh]
             w-full
             bg-black
             relative
             overflow-hidden
         "
-    >
+        >
 
-        {/* REMOTE VIDEO */}
+            {/* REMOTE VIDEO */}
 
-        <video
+            <video
 
-            ref={remoteVideoRef}
+                ref={remoteVideoRef}
 
-            autoPlay
+                autoPlay
 
-            playsInline
+                playsInline
 
-            className="
+                className="
                 w-full
                 h-full
                 object-cover
                 bg-neutral-900
             "
 
-        />
+            />
 
 
-        {/* LOCAL VIDEO */}
+            {/* LOCAL VIDEO */}
 
-        <video
+            <video
 
-            ref={localVideoRef}
+                ref={localVideoRef}
 
-            autoPlay
+                autoPlay
 
-            muted
+                muted
 
-            playsInline
+                playsInline
 
-            className="
+                className="
                 absolute
-                top-5
-                right-5
-                w-32
-                h-44
+                top-[max(1.25rem,env(safe-area-inset-top))]
+                right-4
+                w-24
+                h-32
+                sm:w-32
+                sm:h-44
+                sm:top-5
+                sm:right-5
                 object-cover
                 rounded-xl
                 border
@@ -1038,51 +1042,55 @@ return (
                 bg-neutral-800
             "
 
-        />
+            />
 
 
-        {/* STATUS */}
+            {/* STATUS */}
 
-        <div
-            className="
+            <div
+                className="
                 absolute
-                top-5
-                left-5
+                top-[max(1.25rem,env(safe-area-inset-top))]
+                left-4
+                sm:top-5
+                sm:left-5
                 px-3
                 py-2
                 rounded-full
                 bg-black/60
                 text-white
-                text-sm
+                text-xs
+                sm:text-sm
             "
-        >
+            >
 
-            {isConnected
-                ? "Call Connected"
-                : "Connecting..."}
+                {isConnected
+                    ? "Call Connected"
+                    : "Connecting..."}
 
-        </div>
+            </div>
 
 
-        {/* CONTROLS */}
+            {/* CONTROLS */}
 
-        <div
-            className="
+            <div
+                className="
                 absolute
-                bottom-8
+                bottom-[max(2rem,env(safe-area-inset-bottom))]
                 left-0
                 right-0
                 flex
                 justify-center
                 gap-4
+                px-4
             "
-        >
+            >
 
-            <button
-                onClick={
-                    toggleMic
-                }
-                className={`
+                <button
+                    onClick={
+                        toggleMic
+                    }
+                    className={`
                     w-12
                     h-12
                     rounded-full
@@ -1090,26 +1098,25 @@ return (
                     items-center
                     justify-center
                     text-xl
-                    ${
-                        micOn
+                    ${micOn
                             ? "bg-neutral-800"
                             : "bg-red-600"
-                    }
+                        }
                 `}
-            >
+                >
 
-                {micOn
-                    ? "🎤"
-                    : "🔇"}
+                    {micOn
+                        ? "🎤"
+                        : "🔇"}
 
-            </button>
+                </button>
 
 
-            <button
-                onClick={
-                    endCall
-                }
-                className="
+                <button
+                    onClick={
+                        endCall
+                    }
+                    className="
                     w-12
                     h-12
                     rounded-full
@@ -1119,18 +1126,18 @@ return (
                     justify-center
                     text-xl
                 "
-            >
+                >
 
-                📞
+                    📞
 
-            </button>
+                </button>
 
 
-            <button
-                onClick={
-                    toggleCamera
-                }
-                className={`
+                <button
+                    onClick={
+                        toggleCamera
+                    }
+                    className={`
                     w-12
                     h-12
                     rounded-full
@@ -1138,25 +1145,24 @@ return (
                     items-center
                     justify-center
                     text-xl
-                    ${
-                        cameraOn
+                    ${cameraOn
                             ? "bg-neutral-800"
                             : "bg-red-600"
-                    }
+                        }
                 `}
-            >
+                >
 
-                {cameraOn
-                    ? "📹"
-                    : "🚫"}
+                    {cameraOn
+                        ? "📹"
+                        : "🚫"}
 
-            </button>
+                </button>
+
+            </div>
 
         </div>
 
-    </div>
-
-);
+    );
 
 
 };

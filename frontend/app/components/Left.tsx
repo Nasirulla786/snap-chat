@@ -179,7 +179,7 @@ const Left = () => {
 
             {
                 openNotificationCheck && (
-                    <section className="left hidden md:flex flex-col w-[95%] bg-black h-screen text-white absolute top-0 left-0 z-50">
+                    <section className="left flex flex-col w-full md:w-[95%] bg-black h-full md:h-screen text-white absolute top-0 left-0 z-50">
 
                         {/* Header */}
                         <div className="flex items-center justify-between px-5 py-4 bg-black border-b border-white/10">
@@ -364,10 +364,10 @@ const Left = () => {
 
 
 
-            <section className="left hidden md:flex flex-col w-[95%] border-r-1 border-gray-800 bg-black text-white">
+            <section className="left flex flex-col w-full md:w-[95%] h-full md:h-screen border-r-1 border-gray-800 bg-black text-white overflow-hidden">
 
                 {/* Top bar */}
-                <div className="flex items-center justify-between px-4 py-3 border-b-1 border-gray-800">
+                <div className="flex items-center justify-between px-4 py-3 border-b-1 border-gray-800 pt-[max(0.75rem,env(safe-area-inset-top))]">
 
                     <div className="relative cursor-pointer w-11 h-11" onClick={() => setShowProfileModal(true)}>
 
@@ -547,7 +547,7 @@ const Left = () => {
 
                         </button>
 
-                        <button className="shrink-0 bg-[#111111] px-3 py-1.5 rounded-full flex items-center gap-1 border border-white/10">
+                        <button className="hidden sm:flex shrink-0 bg-[#111111] px-3 py-1.5 rounded-full items-center gap-1 border border-white/10">
 
                             <span className="text-xs font-semibold text-white">
                                 My AI
@@ -640,7 +640,7 @@ const Left = () => {
 
             {searchBoxOpen && (
 
-                <div className="absolute top-0 left-0 z-50 w-[95%] min-h-screen bg-black text-white">
+                <div className="fixed md:absolute inset-0 md:top-0 md:left-0 z-50 w-full md:w-[95%] min-h-[100dvh] md:min-h-screen bg-black text-white">
 
                     <div className="flex items-center gap-3 p-4 border-b border-white/10">
 

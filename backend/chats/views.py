@@ -9,6 +9,30 @@ from django.db.models import Q
 from rest_framework.decorators import permission_classes
 from rest_framework.permissions import IsAuthenticated
 import cloudinary.uploader
+from channels.layers import get_channel_layer
+from asgiref.sync import async_to_sync
+
+
+def broadcast_chat_message(sender_id, receiver_id, message_text, image_url=None):
+    channel_layer = get_channel_layer()
+
+    if channel_layer is None:
+        return
+
+    payload = {
+        "type": "send_message",
+        "message": message_text or "",
+        "sender": sender_id,
+    }
+
+    if image_url:
+        payload["image"] = image_url
+
+    for user_id in [receiver_id, sender_id]:
+        async_to_sync(channel_layer.group_send)(
+            f"user_{user_id}",
+            payload,
+        )
 
 @permission_classes([IsAuthenticated])
 class AddFriend(APIView):
@@ -100,7 +124,21 @@ class SendMessage(APIView):
                 image=image_url
             )
 
-        return Response({"message": "Message sent"})
+            broadcast_chat_message(
+                sender.id,
+                friend.id,
+                text,
+                image_url,
+            )
+
+            serializeMessage = MessagesSerializer(message)
+
+            return Response({
+                "message": "Message sent",
+                "data": serializeMessage.data,
+            })
+
+        return Response({"message": "Nothing to send"})
 
 
 
