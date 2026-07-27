@@ -14,6 +14,7 @@ const Page = () => {
   const [friend, setFriend] = useState<any>(null);
   const [messages, setMessages] = useState<any[]>([]);
   const [message, setMessage] = useState("");
+  const [incomingCall, setIncomingCall] = useState<any>(null);
 
   const [image, setImage] = useState<File | null>(null);
   const [preview, setPreview] = useState<string>("");
@@ -180,16 +181,24 @@ useEffect(() => {
 socket.onmessage = (event) => {
   const data = JSON.parse(event.data);
 
-  setMessages((previousMessages) => [
-    ...previousMessages,
-    {
-      sender: data.sender,
-      text_message: data.message,
-      createdAt: new Date().toISOString(),
-    },
-  ]);
-};
+  console.log("🔥 CHAT SOCKET RECEIVED:", data);
 
+  if (data.type === "incoming-call") {
+  setIncomingCall(data);
+  return;
+}
+
+  if (data.type === "message") {
+    setMessages((previousMessages) => [
+      ...previousMessages,
+      {
+        sender: data.sender,
+        text_message: data.message,
+        createdAt: new Date().toISOString(),
+      },
+    ]);
+  }
+};
   return () => {
     socket.close();
   };
@@ -218,6 +227,124 @@ const getCurrentUser = async () => {
   return (
     // Poori screen ka wrapper - Snapchat Web jaisa dark theme
     <div className="h-screen w-full flex flex-col bg-[#0d0d0d] text-white overflow-hidden relative">
+
+
+
+      {incomingCall && (
+
+  <div
+    className="
+      fixed
+      top-5
+      left-1/2
+      -translate-x-1/2
+      z-[100]
+      w-[90%]
+      max-w-sm
+      bg-neutral-900
+      border
+      border-neutral-700
+      rounded-2xl
+      p-4
+      shadow-2xl
+    "
+  >
+
+    <div className="flex items-center gap-3">
+
+      <div
+        className="
+          w-12
+          h-12
+          rounded-full
+          bg-green-500/20
+          flex
+          items-center
+          justify-center
+          text-2xl
+        "
+      >
+        📹
+      </div>
+
+      <div className="flex-1">
+
+        <p className="font-semibold">
+          {incomingCall.caller_username}
+        </p>
+
+        <p className="text-sm text-neutral-400">
+          Incoming video call
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div className="flex gap-3 mt-4">
+
+      {/* REJECT */}
+
+      <button
+
+        onClick={() => {
+
+          setIncomingCall(null);
+
+        }}
+
+        className="
+          flex-1
+          py-2.5
+          rounded-full
+          bg-red-600
+          font-semibold
+        "
+      >
+
+        Reject
+
+      </button>
+
+
+      {/* ACCEPT */}
+
+      <button
+
+        onClick={() => {
+
+          const callerId =
+            incomingCall.caller_id;
+
+
+          setIncomingCall(null);
+
+
+          router.push(
+            "/call/" + callerId
+          );
+
+        }}
+
+        className="
+          flex-1
+          py-2.5
+          rounded-full
+          bg-green-600
+          font-semibold
+        "
+      >
+
+        Accept
+
+      </button>
+
+    </div>
+
+  </div>
+
+)}
 
 
       {/* ---------- HEADER ---------- */}
@@ -279,7 +406,27 @@ const getCurrentUser = async () => {
             px-3 py-2
             rounded-full
             text-sm
-          ">
+          " onClick={() => {
+
+  if (
+    socketRef.current &&
+    socketRef.current.readyState === WebSocket.OPEN
+  ) {
+
+    socketRef.current.send(
+      JSON.stringify({
+        type: "call-incoming",
+        receiver_id: Number(id),
+        call_type: "video",
+      })
+    );
+
+    console.log("CALL NOTIFICATION SENT");
+
+    router.push("/call/" + id);
+  }
+
+}}>
             Call
             <svg width="15" height="15" viewBox="0 0 24 24" fill="white">
               <path d="M17 10.5V7a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h12a1 1 0 001-1v-3.5l4 3.5v-11l-4 3.5z" />
