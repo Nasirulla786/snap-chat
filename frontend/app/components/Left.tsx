@@ -42,6 +42,7 @@ const Left = () => {
 
     const [searchBoxOpen, setSearchBoxOpen] = useState(false)
     const [search, setSearch] = useState('')
+    const [friendSearch, setFriendSearch] = useState('')
     const [users, setUsers] = useState<User[]>([])
     const [loading, setLoading] = useState(false)
     const [openNotificationCheck, setOpenNotificationCheck] = useState<boolean>(false)
@@ -223,10 +224,10 @@ const Left = () => {
 
                             {pendingRequest.length > 0 ? (
 
-                                pendingRequest.map((request: any) => (
+                                pendingRequest.map((request: any, index: number) => (
 
                                     <div
-                                        key={request.from_user.id}
+                                        key={`req-${request.from_user?.id || index}-${index}`}
                                         className="
                       flex
                       items-center
@@ -530,9 +531,21 @@ const Left = () => {
 
                         <input
                             type="text"
-                            placeholder="Search"
+                            value={friendSearch}
+                            onChange={(e) => setFriendSearch(e.target.value)}
+                            placeholder="Search friends"
                             className="flex-1 bg-transparent outline-none text-white placeholder:text-gray-500 text-sm min-w-0"
                         />
+
+                        {friendSearch && (
+                            <button
+                                onClick={() => setFriendSearch('')}
+                                className="text-gray-400 hover:text-white"
+                                aria-label="Clear friend search"
+                            >
+                                <X size={16} />
+                            </button>
+                        )}
 
                         <button
                             onClick={() => setOpenNotificationCheck(true)}
@@ -570,7 +583,7 @@ const Left = () => {
                 </div>
 
                 {/* Chat / friends list */}
-                <div className="w-full flex-1 overflow-y-auto pb-4">
+                <div className="w-full flex-1 overflow-y-auto no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] pb-4">
 
                     {homeChats.length === 0 ? (
 
@@ -586,57 +599,95 @@ const Left = () => {
 
                     ) : (
 
-                        homeChats.map((user: any) => {
+                        (() => {
+                            const filteredChats = homeChats.filter((u: any) =>
+                                u?.username?.toLowerCase().includes(friendSearch.toLowerCase())
+                            )
 
-                            return (
-                                <div
-                                    onClick={() => router.push('/chat-detail/' + user?.id)}
-                                    className="flex items-center justify-between px-3 py-4.5 cursor-pointer hover:bg-white/5  bg-[#1c1c1c] border-b-[0.5] border-gray-800 border-t-1 transition-colors"
-                                    key={user.id}
-                                >
+                            if (filteredChats.length === 0) {
+                                return (
+                                    <div className="text-center px-4 py-12">
+                                        <p className="text-gray-400 text-sm">
+                                            No friends found matching &quot;{friendSearch}&quot;
+                                        </p>
+                                    </div>
+                                )
+                            }
 
-                                    <div className="flex items-center gap-3 min-w-0">
+                            return filteredChats.map((user: any, index: number) => {
+                                return (
+                                    <div
+                                        className="flex items-center justify-between px-3 py-4 cursor-pointer hover:bg-white/5 bg-[#1c1c1c] border-b border-gray-800 transition-colors"
+                                        key={`homechat-${user?.id || index}-${index}`}
+                                    >
 
-                                        <div className="relative w-11 h-11 rounded-full bg-[#333333] flex items-center justify-center shrink-0 overflow-hidden">
+                                        <div
+                                            onClick={() => router.push('/chat-detail/' + user?.id)}
+                                            className="flex items-center gap-3 min-w-0 flex-1"
+                                        >
 
-                                            {user?.image ? (
-                                                <Image
-                                                    src={user.image}
-                                                    alt={user?.username || 'friend'}
-                                                    fill
-                                                    sizes="44px"
-                                                    className="object-cover"
-                                                />
-                                            ) : (
-                                                <span className="text-white font-bold">
-                                                    {user?.username?.charAt(0)?.toUpperCase() || 'D'}
-                                                </span>
-                                            )}
+                                            <div
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    router.push('/profile/' + user?.id)
+                                                }}
+                                                className="relative w-11 h-11 rounded-full bg-[#333333] hover:ring-2 hover:ring-yellow-400 flex items-center justify-center shrink-0 overflow-hidden transition-all"
+                                                title="View profile"
+                                            >
+
+                                                {user?.image ? (
+                                                    <Image
+                                                        src={user.image}
+                                                        alt={user?.username || 'friend'}
+                                                        fill
+                                                        sizes="44px"
+                                                        className="object-cover"
+                                                    />
+                                                ) : (
+                                                    <span className="text-white font-bold">
+                                                        {user?.username?.charAt(0)?.toUpperCase() || 'D'}
+                                                    </span>
+                                                )}
+
+                                            </div>
+
+                                            <div className="min-w-0">
+
+                                                <h1 className="font-semibold text-[15px] text-white truncate">
+                                                    {user?.username}
+                                                </h1>
+
+                                                <p className="text-xs text-gray-500 flex items-center gap-1">
+                                                    <SendHorizontal size={12} className="text-sky-500" />
+                                                    Tap to chat
+                                                </p>
+
+                                            </div>
 
                                         </div>
 
-                                        <div className="min-w-0">
-
-                                            <h1 className="font-semibold text-[15px] text-white truncate">
-                                                {user?.username}
-                                            </h1>
-
-                                            <p className="text-xs text-gray-500 flex items-center gap-1">
-                                                <SendHorizontal  size={12} className="text-sky-500" />
-                                                Opened · Jun 22
-                                            </p>
-
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                onClick={(e) => {
+                                                    e.stopPropagation()
+                                                    router.push('/profile/' + user?.id)
+                                                }}
+                                                className="text-xs text-yellow-400 font-semibold px-2 py-1 hover:underline"
+                                            >
+                                                Profile
+                                            </button>
+                                            <button
+                                                onClick={() => router.push('/chat-detail/' + user?.id)}
+                                                className="p-2 rounded-full hover:bg-white/10"
+                                            >
+                                                <Camera className="text-white" size={20} />
+                                            </button>
                                         </div>
 
                                     </div>
-
-                                    <span className="text-xs font-semibold text-[#00b8d4] shrink-0">
-                                        <Camera className="text-white" />
-                                    </span>
-
-                                </div>
-                            )
-                        })
+                                )
+                            })
+                        })()
                     )}
 
                 </div>
@@ -739,11 +790,12 @@ const Left = () => {
 
                         <div className="space-y-1">
 
-                            {users.map((user) => (
+                            {users.map((user, index) => (
 
-                                <div className='flex justify-between items-center' key={user?.id}>
+                                <div className='flex justify-between items-center' key={`searchuser-${user?.id || index}-${index}`}>
 
                                     <div
+                                        onClick={() => router.push('/profile/' + user?.id)}
                                         className="flex items-center gap-3 p-2 rounded-xl hover:bg-white/5 cursor-pointer flex-1 min-w-0"
                                     >
 
@@ -781,7 +833,7 @@ const Left = () => {
                                             </p>
 
                                             <p className="text-xs text-gray-500">
-                                                Tap to chat
+                                                Tap to view profile
                                             </p>
 
                                         </div>

@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react'
 import useFetchAllReels from "../hooks/useFetchAllReels"
 import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
-import { Heart, MessageCircle, Send, Volume2, VolumeX, X } from 'lucide-react'
+import { Heart, MessageCircle, Send, Volume2, VolumeX, X, Copy, Check, Share2 } from 'lucide-react'
 import axios from 'axios'
 import { ServerURL } from '../page'
 import { setReelData } from '../redux/slices/reelslice'
@@ -13,6 +13,7 @@ interface IUser {
     id: number
     username: string
     email: string
+    image?: string
 }
 
 interface IComment {
@@ -37,7 +38,7 @@ const Right = () => {
     useFetchAllReels()
 
     const { reelData }: any = useSelector((state: RootState) => state.reel)
-    const { userData }: any = useSelector((state: RootState) => state.user)
+    const { userData, friendsData }: any = useSelector((state: RootState) => state.user)
 
     const dispatch = useDispatch()
 
@@ -48,6 +49,51 @@ const Right = () => {
     const currentUserId = userData?.id
 
     const [openCommentId, setOpenCommentId] = useState<number | null>(null)
+    const [shareModalReel, setShareModalReel] = useState<IReel | null>(null)
+    const [copied, setCopied] = useState(false)
+    const [sendingFriendId, setSendingFriendId] = useState<number | null>(null)
+    const [sentFriendIds, setSentFriendIds] = useState<Record<number, boolean>>({})
+
+    const handleCopyLink = (reelUrl: string) => {
+        navigator.clipboard.writeText(reelUrl)
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+    }
+
+    const handleNativeShare = async (reel: IReel) => {
+        if (navigator.share) {
+            try {
+                await navigator.share({
+                    title: `Reel by @${reel.user.username}`,
+                    text: reel.caption || 'Check out this Reel!',
+                    url: reel.reel,
+                })
+            } catch (err) {
+                console.log(err)
+            }
+        } else {
+            handleCopyLink(reel.reel)
+        }
+    }
+
+    const handleSendReelToFriend = async (friendId: number) => {
+        if (!shareModalReel) return
+        try {
+            setSendingFriendId(friendId)
+            await axios.post(
+                `${ServerURL}/api/send-message/${friendId}`,
+                {
+                    message: `Check out this reel by @${shareModalReel.user.username}: ${shareModalReel.reel}`,
+                },
+                { withCredentials: true }
+            )
+            setSentFriendIds((prev) => ({ ...prev, [friendId]: true }))
+        } catch (error) {
+            console.error('Error sharing reel to friend:', error)
+        } finally {
+            setSendingFriendId(null)
+        }
+    }
 
 
     const [commentsMap, setCommentsMap] = useState<Record<number, IComment[]>>({})
@@ -137,11 +183,11 @@ const Right = () => {
     const activeComments = openCommentId ? commentsMap[openCommentId] || [] : []
 
     return (
-        <section className="right flex flex-col items-center gap-4 bg-black h-full md:h-screen overflow-y-auto snap-y snap-mandatory relative py-4 pb-6 md:pb-4">
+        <section className="right flex flex-col items-center gap-4 bg-black h-full md:h-screen overflow-y-auto no-scrollbar [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] snap-y snap-mandatory relative py-4 pb-6 md:pb-4">
 
             {reelData?.reels?.length ? (
 
-                reelData.reels.map((item: IReel) => {
+                reelData.reels.map((item: IReel, index: number) => {
 
                     const isLiked =
                         likedMap[item.id] !== undefined
@@ -154,7 +200,7 @@ const Right = () => {
 
                     return (
                         <div
-                            key={item.id}
+                            key={`reel-${item.id || index}-${index}`}
                             className="relative w-full max-w-[360px] md:w-[320px] h-[calc(100dvh-120px)] md:h-[568px] rounded-2xl md:rounded-[28px] overflow-hidden bg-neutral-900 snap-start shrink-0 border-[3px] border-black shadow-[0_0_0_1px_rgba(255,255,255,0.06)] mx-auto"
                         >
 
@@ -215,10 +261,19 @@ const Right = () => {
                                     </span>
                                 </button>
 
-                                <button className="flex flex-col items-center text-white">
+                                <button
+                                    onClick={() => {
+                                        setShareModalReel(item)
+                                        setCopied(false)
+                                        setSentFriendIds({})
+                                    }}
+                                    className="flex flex-col items-center text-white active:scale-90 transition-transform"
+                                    title="Share reel"
+                                >
                                     <div className="rounded-full p-2 bg-black/30 backdrop-blur-md">
                                         <Send size={20} />
                                     </div>
+                                    <span className="text-[11px] mt-1 font-medium drop-shadow">Share</span>
                                 </button>
                             </div>
 
@@ -262,8 +317,8 @@ const Right = () => {
                             {loadingComments ? (
                                 <p className="text-xs text-neutral-500 text-center mt-6">Loading comments...</p>
                             ) : activeComments.length ? (
-                                activeComments.map((c) => (
-                                    <div key={c.id} className="flex items-start gap-2">
+                                activeComments.map((c, index: number) => (
+                                    <div key={`comment-${c.id || index}-${index}`} className="flex items-start gap-2">
                                         <div className="w-7 h-7 shrink-0 rounded-full bg-[#FFFC00] flex items-center justify-center text-black text-[11px] font-black">
                                             {c.user?.username?.charAt(0).toUpperCase()}
                                         </div>
@@ -297,6 +352,116 @@ const Right = () => {
                             >
                                 <Send size={18} />
                             </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Share Reel Sheet Modal */}
+            {shareModalReel && (
+                <div
+                    className="fixed inset-0 z-50 flex items-end justify-center bg-black/70"
+                    onClick={() => setShareModalReel(null)}
+                >
+                    <div
+                        className="w-full max-w-sm md:max-w-sm bg-[#0A0A0A] rounded-t-3xl h-[65dvh] md:h-[55%] flex flex-col pb-[env(safe-area-inset-bottom,0px)] border-t border-white/10"
+                        onClick={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex justify-center pt-2.5 pb-1">
+                            <div className="w-10 h-1 rounded-full bg-neutral-700" />
+                        </div>
+
+                        <div className="flex items-center justify-between px-4 py-2.5 border-b border-neutral-800">
+                            <p className="font-bold text-sm text-white">
+                                Share Reel · @{shareModalReel.user?.username}
+                            </p>
+                            <button onClick={() => setShareModalReel(null)}>
+                                <X size={20} className="text-neutral-400 hover:text-white" />
+                            </button>
+                        </div>
+
+                        {/* Actions row: Copy Link & Native Share */}
+                        <div className="flex items-center gap-3 px-4 py-3 border-b border-neutral-800">
+                            <button
+                                onClick={() => handleCopyLink(shareModalReel.reel)}
+                                className="flex-1 flex items-center justify-center gap-2 bg-neutral-800 hover:bg-neutral-700 text-white font-semibold py-2.5 rounded-full text-xs transition-colors"
+                            >
+                                {copied ? (
+                                    <>
+                                        <Check size={16} className="text-green-400" />
+                                        <span className="text-green-400">Link Copied!</span>
+                                    </>
+                                ) : (
+                                    <>
+                                        <Copy size={16} />
+                                        <span>Copy Link</span>
+                                    </>
+                                )}
+                            </button>
+
+                            <button
+                                onClick={() => handleNativeShare(shareModalReel)}
+                                className="flex-1 flex items-center justify-center gap-2 bg-[#FFFC00] hover:bg-yellow-300 text-black font-bold py-2.5 rounded-full text-xs transition-colors"
+                            >
+                                <Share2 size={16} />
+                                <span>Share via...</span>
+                            </button>
+                        </div>
+
+                        {/* Send to friends list */}
+                        <div className="flex-1 overflow-y-auto px-4 py-3">
+                            <p className="text-xs font-bold text-neutral-400 mb-3 uppercase tracking-wider">
+                                Send to Friends
+                            </p>
+
+                            {friendsData && friendsData.length > 0 ? (
+                                <div className="space-y-2">
+                                    {friendsData.map((friend: IUser) => {
+                                        const isSent = sentFriendIds[friend.id]
+                                        const isSending = sendingFriendId === friend.id
+
+                                        return (
+                                            <div
+                                                key={friend.id}
+                                                className="flex items-center justify-between p-2 rounded-xl bg-neutral-900 border border-neutral-800"
+                                            >
+                                                <div className="flex items-center gap-3">
+                                                    <div className="w-8 h-8 rounded-full bg-[#FFFC00] flex items-center justify-center text-black font-extrabold text-xs">
+                                                        {friend.username?.charAt(0).toUpperCase()}
+                                                    </div>
+                                                    <span className="text-sm font-semibold text-white">
+                                                        {friend.username}
+                                                    </span>
+                                                </div>
+
+                                                <button
+                                                    onClick={() => handleSendReelToFriend(friend.id)}
+                                                    disabled={isSent || isSending}
+                                                    className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                                                        isSent
+                                                            ? 'bg-green-500/20 text-green-400 border border-green-500/30'
+                                                            : 'bg-[#FFFC00] hover:bg-yellow-300 text-black active:scale-95'
+                                                    }`}
+                                                >
+                                                    {isSent ? (
+                                                        <span className="flex items-center gap-1">
+                                                            <Check size={12} /> Sent
+                                                        </span>
+                                                    ) : isSending ? (
+                                                        'Sending...'
+                                                    ) : (
+                                                        'Send'
+                                                    )}
+                                                </button>
+                                            </div>
+                                        )
+                                    })}
+                                </div>
+                            ) : (
+                                <p className="text-xs text-neutral-500 text-center py-6">
+                                    No friends found to send directly. Copy link above to share!
+                                </p>
+                            )}
                         </div>
                     </div>
                 </div>

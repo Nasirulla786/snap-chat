@@ -175,29 +175,70 @@ def search(req):
 
 
     for user in search_data:
+        if req.user.is_authenticated and req.user.id == user.id:
+            continue
 
-        # check friend request
-        is_pending = FriendRequest.objects.filter(
-            from_user=req.user,
-            to_user=user
-        ).exists()
-
+        status_val = "add"
+        if req.user.is_authenticated:
+            freq = FriendRequest.objects.filter(
+                Q(from_user=req.user, to_user=user) | Q(from_user=user, to_user=req.user)
+            ).first()
+            if freq:
+                if freq.status == FriendRequest.StatusChoices.ACCEPTED:
+                    status_val = "friends"
+                elif freq.from_user == req.user and freq.status == FriendRequest.StatusChoices.PENDING:
+                    status_val = "pending"
+                elif freq.to_user == req.user and freq.status == FriendRequest.StatusChoices.PENDING:
+                    status_val = "accept_pending"
 
         users.append({
-
             "id": user.id,
-
             "username": user.username,
-
             "image": user.user_profile.image
                 if hasattr(user, "user_profile")
                 else None,
-
-            "status": "pending" if is_pending else "add"
-
+            "status": status_val
         })
 
 
     return Response({
         "data": users
     })
+
+
+@api_view(['GET'])
+def getUserProfile(req, id):
+    user = get_object_or_404(User, pk=id)
+    profile = Profile.objects.filter(user=user).first()
+
+    friend_status = "add"
+    if req.user.is_authenticated:
+        if req.user.id == user.id:
+            friend_status = "self"
+        else:
+            freq = FriendRequest.objects.filter(
+                Q(from_user=req.user, to_user=user) | Q(from_user=user, to_user=req.user)
+            ).first()
+            if freq:
+                if freq.status == FriendRequest.StatusChoices.ACCEPTED:
+                    friend_status = "friends"
+                elif freq.from_user == req.user and freq.status == FriendRequest.StatusChoices.PENDING:
+                    friend_status = "pending"
+                elif freq.to_user == req.user and freq.status == FriendRequest.StatusChoices.PENDING:
+                    friend_status = "accept_pending"
+
+    from reels.models import ReelModel
+    from reels.reelSerializer import ReelSerializer
+    user_reels = ReelModel.objects.filter(user=user)
+    reels_data = ReelSerializer(user_reels, many=True).data if user_reels.exists() else []
+
+    return Response({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email if (req.user.is_authenticated and req.user.id == user.id) else None,
+        "bio": profile.bio if profile else None,
+        "image": profile.image if profile else None,
+        "status": friend_status,
+        "reels": reels_data
+    })
+

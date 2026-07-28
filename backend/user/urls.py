@@ -8,5 +8,6 @@ urlpatterns = [
     path("current-user/" , views.currentUser ,name="current-user"),
     path("logout/", views.logoutUser, name="logout"),
     path("create-profile/" , views.profileCreate , name='create-profile'),
-    path("search" , views.search , name="search")
+    path("search" , views.search , name="search"),
+    path("profile/<int:id>/", views.getUserProfile, name="get-user-profile"),
 ]
