@@ -15,6 +15,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 import os
 import cloudinary
+import dj_database_url
 load_dotenv()
 
 cloudinary.config(
@@ -44,12 +45,14 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/5.2/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-0j=3rgcjn_)70rhw64x@t*r^u41n@9&m)d5@a9k)75%4l$s4xh'
+# SECRET_KEY = 'django-insecure-0j=3rgcjn_)70rhw64x@t*r^u41n@9&m)d5@a9k)75%4l$s4xh'
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.environ.get("DEBUG", "False") == "True"
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ["*"]
 
 
 # Application definition
@@ -118,15 +121,22 @@ ASGI_APPLICATION = "config.asgi.application"
 
 
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.postgresql",
+#         "NAME": "snapchat",
+#         "USER": "postgres",
+#         "PASSWORD": "sara1124",
+#         "HOST": "localhost",
+#         "PORT": "5432",
+#     }
+# }
+
+
 DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "snapchat",
-        "USER": "postgres",
-        "PASSWORD": "sara1124",
-        "HOST": "localhost",
-        "PORT": "5432",
-    }
+    "default": dj_database_url.config(
+        default=os.environ.get("DATABASE_URL")
+    )
 }
 
 # Password validation
@@ -181,19 +191,19 @@ REST_FRAMEWORK = {
 
 
 CORS_ALLOWED_ORIGINS = [
-    "http://localhost:3000"
+   "*"
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 
 CSRF_TRUSTED_ORIGINS = [
-    "http://localhost:3000",
+    "*"
 ]
 
 
 
-CSRF_TRUSTED_ORIGINS = ["http://localhost:3000"]
+CSRF_TRUSTED_ORIGINS = ["*"]
 
 CHANNEL_LAYERS = {
     "default": {
