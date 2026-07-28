@@ -73,21 +73,23 @@ def loginUser(request):
     )
 
     response.set_cookie(
-        key="access_token",
-        value=str(access),
-        path="/",
-        httponly=True,
-        samesite="Lax",
-        max_age=15 * 60,
-    )
+    key="access_token",
+    value=str(access),
+    httponly=True,
+    secure=True,
+    samesite="None",
+    path="/",
+    max_age=15*60
+)
 
     response.set_cookie(
         key="refresh_token",
         value=str(refresh),
-        path="/",
         httponly=True,
-        samesite="Lax",
-        max_age=7 * 24 * 60 * 60,
+        secure=True,
+        samesite="None",
+        path="/",
+        max_age=7*24*60*60
     )
 
     return response
