@@ -4,11 +4,13 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-django = "*"
 djangorestframework = "*"
 djangorestframework-simplejwt = "*"
 django-cors-headers = "*"
 pillow = "*"
+django = "*"
+channels = "*"
+daphne = "*"
 
 [dev-packages]
 

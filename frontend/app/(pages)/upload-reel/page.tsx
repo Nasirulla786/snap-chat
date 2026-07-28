@@ -5,12 +5,14 @@ import React, { useRef, useState } from 'react'
 import { Camera, X, Send } from 'lucide-react'
 import axios from 'axios'
 import { ServerURL } from '@/app/page'
+import { useRouter } from 'next/navigation'
 
 const UploadReelPage = () => {
   const [preview, setPreview] = useState('')
   const [fileType, setFileType] = useState<'image' | 'video' | ''>('')
   const [caption, setCaption] = useState('')
   const [backendMedia, setBackendMedia] = useState<File | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const fileRef = useRef<HTMLInputElement | null>(null)
 
@@ -39,13 +41,19 @@ const UploadReelPage = () => {
     }
   }
 
+
+
+  const router = useRouter()
   const handleUploadReel = async () => {
+
     if (!backendMedia) {
       alert('Please select a file')
       return
     }
 
+
     try {
+      setLoading(true)
       const formData = new FormData()
 
       formData.append('caption', caption)
@@ -59,9 +67,13 @@ const UploadReelPage = () => {
         }
       )
 
-      console.log(res.data)
+
+
+      setLoading(false)
       alert('Reel uploaded successfully!')
+      router.push("/")
     } catch (err: any) {
+      setLoading(false)
       console.log(err.response?.data)
       alert('Upload failed')
     }
@@ -143,10 +155,10 @@ const UploadReelPage = () => {
               />
 
               <button
-                onClick={handleUploadReel}
-                className="w-full flex items-center justify-center gap-2 bg-[#FFFC00] text-black font-bold rounded-full py-3 text-sm"
+                onClick={handleUploadReel} disabled={loading==true}
+                className="w-full flex items-center justify-center gap-2 bg-[#FFFC00] text-black font-bold rounded-full py-3 text-sm cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
               >
-                Send To
+                {loading?"Sending...":"Upload"}
                 <Send size={16} />
               </button>
             </div>

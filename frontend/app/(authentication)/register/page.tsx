@@ -2,6 +2,7 @@
 
 import { ServerURL } from '@/app/page'
 import axios from 'axios'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import React, { useState } from 'react'
 
@@ -12,13 +13,25 @@ const RegisterPage = () => {
   const [password, setPassword] = useState('')
   const router = useRouter()
 
-  const handleSubmit =async (e:any) => {
+  const handleSubmit = async (e: any) => {
     e.preventDefault()
 
-    const res =  await axios.post(`${ServerURL}/api/register/` , {username , email , password},{withCredentials:true})
-    console.log(res)
+    const res = await axios.post(`${ServerURL}/api/register/`, { username, email, password }, { withCredentials: true })
 
-    router.push("/")
+    if (res.status === 201) {
+      await axios.post(
+        `${ServerURL}/api/login/`,
+        { username, password },
+        { withCredentials: true }
+      )
+      router.push("/profile-form")
+    } else {
+      alert(res.data?.message || "Failed to register")
+    }
+
+
+
+
 
 
 
@@ -117,7 +130,7 @@ const RegisterPage = () => {
 
         <p className="text-center text-sm text-black mt-6 font-medium">
           Already have an account?{' '}
-          <span className="font-bold underline cursor-pointer">Log in</span>
+         <Link href={"/login"}> <span className="font-bold underline cursor-pointer" >Log in</span></Link>
         </p>
       </div>
     </div>
