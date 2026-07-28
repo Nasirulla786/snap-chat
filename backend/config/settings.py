@@ -191,20 +191,17 @@ REST_FRAMEWORK = {
 
 
 CORS_ALLOWED_ORIGINS = [
-   "*"
+    "http://localhost:3000",
+    "https://snap-chat-rose.vercel.app",
 ]
 
 CORS_ALLOW_CREDENTIALS = True
 
 
 CSRF_TRUSTED_ORIGINS = [
-    "*"
+    "http://localhost:3000",
+    "https://snap-chat-rose.vercel.app",
 ]
-
-
-
-CSRF_TRUSTED_ORIGINS = ["*"]
-
 CHANNEL_LAYERS = {
     "default": {
         "BACKEND": "channels.layers.InMemoryChannelLayer",
