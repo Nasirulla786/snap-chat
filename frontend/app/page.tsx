@@ -3,9 +3,7 @@ import Homepage from "./components/Homepage";
 
 
 
-export const ServerURL = 'http://localhost:8000'
+export const ServerURL = 'https://snapchat-back.onrender.com'
 export default function Home() {
-
-
   return <Homepage />;
 }
