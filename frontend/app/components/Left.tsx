@@ -3,7 +3,7 @@ import { Ghost, Check, Send, SendHorizontal } from "lucide-react";
 import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import { RootState } from '../redux/store'
 import {
     Images,
@@ -22,6 +22,7 @@ import {
 import axios from 'axios'
 import { ServerURL } from '../page'
 import { useRouter } from 'next/navigation'
+import { setFriendsData } from "../redux/slices/userslice";
 
 interface User {
     id: number
@@ -100,11 +101,16 @@ const Left = () => {
 
 
     const [homeChats, setHomeChats] = useState<any[]>([])
+
+    const dispatch = useDispatch()
+
     useEffect(() => {
         const fetchMyFriends = async () => {
             try {
                 const res = await axios.get(`${ServerURL}/api/get-friends/`, { withCredentials: true })
                 setHomeChats(res.data.data)
+                dispatch(setFriendsData(res.data.data))
+
 
             } catch (error) {
                 console.log(error)

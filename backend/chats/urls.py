@@ -6,6 +6,7 @@ urlpatterns = [
     path("my-friend/<int:id>" , views.ChatFriend.as_view() , name="my-friend"),
     path("send-message/<int:id>" , views.SendMessage.as_view() , name="send-message"),
     path("get-pending-request/", views.GetPendingRequests.as_view() , name="get-pending-request" ),
-    path("accept-invite/<int:id>/" , views.AcceptInvite.as_view(), name="accept-invite")
+    path("accept-invite/<int:id>/" , views.AcceptInvite.as_view(), name="accept-invite"),
+    path("send-snap/<int:id>/" , views.SendSnap.as_view() , name="send-snap"),
 
 ]

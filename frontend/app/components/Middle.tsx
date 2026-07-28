@@ -2,9 +2,13 @@
 
 import { useRouter } from 'next/navigation'
 import React, { useEffect, useRef, useState } from 'react'
-import { Camera } from 'lucide-react'
+import { Camera, Ghost, Send, SendHorizontal ,X } from 'lucide-react'
 import axios from 'axios'
 import { ServerURL } from '../page'
+import { useSelector } from 'react-redux'
+import { RootState } from '../redux/store'
+import Image from 'next/image'
+
 
 const Middle = () => {
 
@@ -15,6 +19,9 @@ const Middle = () => {
   const [capturedImage, setCapturedImage] = useState<string | null>(null)
   const [cameraOpen, setCameraOpen] = useState(false)
   const [buttonToggle, setButtonToggle] = useState(false)
+  const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [sendFriend, setSendFriend] = useState(false)
+  const {friendsData}:any = useSelector<RootState>(state=>state.user)
 
   useEffect(() => {
 
@@ -119,6 +126,30 @@ const Middle = () => {
 
   }
 
+
+
+
+  const handleSendFried = async(id:any)=>{
+    try {
+
+      const blob = await (await fetch(capturedImage!)).blob()
+
+      const formData = new FormData()
+      formData.append("image", blob, "snap.jpg")
+      const res = await axios.post(`${ServerURL}/api/send-snap/${id}/`,formData , {withCredentials:true})
+      alert("Snap Sent Successfully!")
+  setSendFriend(false)
+  setCapturedImage(null)
+  setCameraOpen(false)
+
+    } catch (error) {
+      console.log(error)
+
+    }
+
+  }
+
+
   return (
 
     <section className="relative h-full w-full flex items-center justify-center overflow-hidden bg-black">
@@ -183,6 +214,11 @@ const Middle = () => {
               className="h-full w-full object-cover"
             />
 
+<canvas
+    ref={canvasRef}
+    className="absolute inset-0 w-full h-full pointer-events-none"
+/>
+
             <div className="absolute top-0 left-0 right-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
 
               <button
@@ -217,37 +253,112 @@ const Middle = () => {
 
         )}
 
-        {capturedImage && (
+{capturedImage && (
+  <div className="relative h-full w-full bg-black">
+    <img
+      src={capturedImage}
+      alt="Captured snap"
+      className="h-full w-full object-cover"
+    />
 
-          <div className="relative h-full w-full bg-black">
+    {/* Top action bar */}
+    <div className="absolute top-0 left-0 right-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
+      <button
+        onClick={retakeImage}
+        className="bg-white/15 backdrop-blur-sm text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-white/25 active:scale-95 transition"
+      >
+        Retake
+      </button>
 
-            <img
-              src={capturedImage}
-              alt="Captured snap"
-              className="h-full w-full object-cover"
-            />
+      <div className="flex items-center gap-2">
+        <button
+          onClick={handleSave}
+          className="bg-[#FFFC00] text-black font-bold text-sm px-5 py-2 rounded-full hover:brightness-95 active:scale-95 transition"
+        >
+          Save Photo
+        </button>
 
-            <div className="absolute top-0 left-0 right-0 p-4 pt-[max(1rem,env(safe-area-inset-top))] flex justify-between items-center bg-gradient-to-b from-black/50 to-transparent">
+        <button
+          onClick={() => setSendFriend(true)}
+          className="bg-[#FFFC00] text-black font-bold text-sm px-4 py-2 rounded-full hover:brightness-95 active:scale-95 transition flex items-center gap-1"
+        >
+          <Send size={16} /> Send To
+        </button>
+      </div>
+    </div>
 
-              <button
-                onClick={retakeImage}
-                className="bg-white/15 backdrop-blur-sm text-white text-sm font-medium px-4 py-2 rounded-full hover:bg-white/25 transition active:scale-95"
-              >
-                Retake
-              </button>
+    {/* Send To panel — Snapchat style bottom sheet */}
+    {sendFriend && (
+      <div className="absolute inset-0 bg-black flex flex-col animate-in slide-in-from-bottom duration-200">
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-3 border-b border-white/10">
+          <button
+            onClick={() => setSendFriend(false)}
+            className="text-white p-1 hover:bg-white/10 rounded-full transition"
+          >
+            <X size={22} />
+          </button>
+          <h2 className="text-white font-semibold text-base">Send To</h2>
+          <div className="w-8" /> {/* spacer to center title */}
+        </div>
 
-              <button
-                className="bg-[#FFFC00] text-black font-bold text-sm px-5 py-2 rounded-full hover:brightness-95 active:scale-95 transition"
-                onClick={handleSave}
-              >
-                Save Photo
-              </button>
-
+        {/* Friends list */}
+        <div className="flex-1 overflow-y-auto">
+          {friendsData.length === 0 ? (
+            <div className="flex flex-col items-center justify-center text-center px-8 py-16 h-full">
+              <Ghost className="w-12 h-12 text-white/10 mb-3" fill="currentColor" strokeWidth={1} />
+              <p className="text-white/60 text-sm">
+                No chats yet. Add friends to start snapping.
+              </p>
             </div>
+          ) : (
+            friendsData.map((user: any) => (
+              <div
+                key={user.id}
+                className="flex items-center justify-between px-4 py-3 cursor-pointer hover:bg-white/5 border-b border-white/5 transition-colors"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <div className="relative w-11 h-11 rounded-full bg-[#333333] flex items-center justify-center shrink-0 overflow-hidden">
+                    {user?.image ? (
+                      <Image
+                        src={user.image}
+                        alt={user?.username || "friend"}
+                        fill
+                        sizes="44px"
+                        className="object-cover"
+                      />
+                    ) : (
+                      <span className="text-white font-bold">
+                        {user?.username?.charAt(0)?.toUpperCase() || "D"}
+                      </span>
+                    )}
+                  </div>
 
-          </div>
+                  <div className="min-w-0">
+                    <h1 className="font-semibold text-[15px] text-white truncate">
+                      {user?.username}
+                    </h1>
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <SendHorizontal size={12} className="text-sky-500" />
+                      Opened · Jun 22
+                    </p>
+                  </div>
+                </div>
 
-        )}
+                <button
+                  onClick={() => handleSendFried(user?.id)}
+                  className="w-8 h-8 rounded-full bg-[#FFFC00] flex items-center justify-center shrink-0"
+                >
+                  <Send size={14} className="text-black" />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    )}
+  </div>
+)}
 
       </div>
 

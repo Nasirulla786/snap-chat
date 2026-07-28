@@ -16,30 +16,6 @@ const MySnap = () => {
 
 
 
-//     useEffect(() => {
-//     const fetchMySnaps = async () => {
-//       try {
-//         const token = localStorage.getItem("token");
-
-//         const res = await axios.get(
-//           "http://127.0.0.1:8000/api/my-snaps/",
-//           {
-//             headers: {
-//               Authorization: `Bearer ${token}`,
-//             },
-//           }
-//         );
-
-//         setSnaps(res.data);
-//       } catch (error) {
-//         console.error(error);
-//       } finally {
-//         setLoading(false);
-//       }
-//     };
-//     fetchMySnaps()
-//   },[]
-// )
   useEffect(() => {
     const fetchMySnaps = async () => {
       try {
@@ -52,7 +28,9 @@ const MySnap = () => {
           }
         );
 
-        // console.log(res)
+
+
+
 
         setSnaps(res.data);
       } catch (error) {

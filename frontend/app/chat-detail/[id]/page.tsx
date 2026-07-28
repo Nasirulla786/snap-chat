@@ -153,18 +153,36 @@ const Page = () => {
 
 const socketRef = useRef<WebSocket | null>(null);
 
-const sendMessage = () => {
-  if (!message.trim()) return;
+const fileToBase64 = (file: File) =>
+  new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
 
-  socketRef.current?.send(
-    JSON.stringify({
-      message: message,
-      receiver_id: Number(id),
-    })
-  );
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = reject;
 
-  setMessage("");
-};
+    reader.readAsDataURL(file);
+  });
+
+  const sendMessage = async () => {
+    if (!message.trim() && !image) return;
+
+    let imageData = "";
+
+    if (image) {
+      imageData = await fileToBase64(image);
+    }
+
+    socketRef.current?.send(
+      JSON.stringify({
+        message,
+        image: imageData,
+        receiver_id: Number(id),
+      })
+    );
+
+    setMessage("");
+    cancelImage();
+  };
 
 
 useEffect(() => {
@@ -194,9 +212,10 @@ socket.onmessage = (event) => {
       {
         sender: data.sender,
         text_message: data.message,
+        image: data.image,
         createdAt: new Date().toISOString(),
       },
-    ]);
+    ]);;
   }
 };
   return () => {

@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from rest_framework_simplejwt.authentication import JWTAuthentication
 
 from .models import Message
-
+import cloudinary.uploader
 
 class ChatConsumer(WebsocketConsumer):
 
@@ -108,16 +108,22 @@ class ChatConsumer(WebsocketConsumer):
             "message"
         )
 
+        image = data.get("image")
+
 
         receiver_id = data.get(
             "receiver_id"
         )
 
+        image_url = None
 
-        if not message or not receiver_id:
+        if image:
+            result = cloudinary.uploader.upload(image)
+            image_url = result["secure_url"]
 
+
+        if (not message and not image) or not receiver_id:
             return
-
 
         receiver = User.objects.get(
             id=receiver_id
@@ -125,14 +131,11 @@ class ChatConsumer(WebsocketConsumer):
 
 
         saved_message = Message.objects.create(
-
-            sender=self.user,
-
-            receiver=receiver,
-
-            text_message=message
-
-        )
+        sender=self.user,
+        receiver=receiver,
+        text_message=message,
+        image=image_url,
+)
 
 
         print(
@@ -145,48 +148,30 @@ class ChatConsumer(WebsocketConsumer):
 
         async_to_sync(
             self.channel_layer.group_send
-        )(
-
-            f"user_{receiver.id}",
-
-            {
-
-                "type":
-                    "send_message",
-
-                "message":
-                    message,
-
-                "sender":
-                    self.user.id,
-
-            }
-
-        )
+            )(
+                f"user_{receiver.id}",
+                {
+                    "type": "send_message",
+                    "message": message,
+                    "image": image_url,   # 👈 add karo
+                    "sender": self.user.id,
+                }
+            )
 
 
         # Send message to sender also
 
         async_to_sync(
             self.channel_layer.group_send
-        )(
-
-            f"user_{self.user.id}",
-
-            {
-
-                "type":
-                    "send_message",
-
-                "message":
-                    message,
-
-                "sender":
-                    self.user.id,
-
-            }
-
-        )
+            )(
+                f"user_{self.user.id}",
+                {
+                    "type": "send_message",
+                    "message": message,
+                    "image": image_url,   # 👈 add karo
+                    "sender": self.user.id,
+                }
+            )
 
 
     # =========================================

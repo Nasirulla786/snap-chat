@@ -11,6 +11,8 @@ from rest_framework.permissions import IsAuthenticated
 import cloudinary.uploader
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
 
 
 def broadcast_chat_message(sender_id, receiver_id, message_text, image_url=None):
@@ -97,6 +99,7 @@ class ChatFriend(APIView):
 
 
 
+
 class SendMessage(APIView):
     def post(self, req, id):
         text = req.data.get("message")
@@ -139,6 +142,43 @@ class SendMessage(APIView):
             })
 
         return Response({"message": "Nothing to send"})
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class SendSnap(APIView):
+    permission_classes = [IsAuthenticated]
+    def post(self, req, id):
+        snap = req.FILES.get("image")
+        friend = get_object_or_404(User, pk=id)
+        sender = req.user
+        image_url = None
+        if snap:
+            upload = cloudinary.uploader.upload(snap, resource_type="image")
+            image_url = upload["secure_url"]
+        if image_url:
+            message = Message.objects.create(
+                sender=sender,
+                receiver=friend,
+                text_message=None,
+                image=image_url
+            )
+
+            broadcast_chat_message(
+                sender.id,
+                friend.id,
+                "",
+                image_url
+            )
+
+        return Response({
+            "message": "Snap sent",
+            "data": image_url
+        })
+
+
+
+
+
 
 
 

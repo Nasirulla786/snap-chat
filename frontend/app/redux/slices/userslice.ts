@@ -4,7 +4,8 @@ const userSlice = createSlice({
   name: "userdata",
   initialState: {
     userData: null,
-    profileData:null
+    profileData:null,
+    friendsData:null
   },
   reducers: {
     setUserData: (state, action) => {
@@ -12,9 +13,12 @@ const userSlice = createSlice({
     },
     setProfileData:(state,action)=>{
       state.profileData = action.payload
+    },
+    setFriendsData:(state,action)=>{
+      state.friendsData = action.payload
     }
   },
 });
 
-export const { setUserData  , setProfileData} = userSlice.actions;
+export const { setUserData  , setProfileData, setFriendsData} = userSlice.actions;
 export default userSlice.reducer;
